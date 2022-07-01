@@ -170,8 +170,10 @@ def make_histogram(df, unit_,
         # Freedman–Diaconis rule
         # (need to recalculate IQR)
         q75, q25 = np.percentile(df, [75, 25])
+
         iqr = q75 - q25
-        bin_width = int(2 * (iqr) / (npts ** (1 / 3)))
+
+        bin_width = 1#int(2 * (iqr) / (npts ** (1 / 3)))
 
         # or the simple 'excel' rule:
         # bin_width = int(full_range / np.ceil(npts**(0.5)))

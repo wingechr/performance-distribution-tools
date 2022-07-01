@@ -348,3 +348,26 @@ def convert_ISO3_to_name():
     """
     convert a 3-letter ISO code to a full country name
     """
+
+# EPO:
+def get_primap_variable_and_and_file_name(gas_name, raw_sector, raw_scenario, dset_version):
+    
+    sector_codes = pd.read_csv('primap_sectors.csv')
+    sector_codes.set_index('code', inplace=True)
+
+    source_name = 'PRIMAP-' + raw_scenario.lower() + '_v' + dset_version
+    #source_name_display = 'PRIMAP-' + raw_scenario.lower()
+
+    if raw_sector in ['M.0.EL', '1.B.3', '2.G', '2.H']:
+        variable_name_to_display = sector_codes.loc[raw_sector]['1'] + ' ' + gas_name + ' ' + sector_codes.loc[raw_sector]['3'] + ' ' + sector_codes.loc[raw_sector]['4']
+    elif raw_sector in ['1', '1.B', '5', '1.B.2']:
+        variable_name_to_display = sector_codes.loc[raw_sector]['1'] + ' ' + gas_name + ' ' + sector_codes.loc[raw_sector]['3']
+    elif raw_sector in ['2.D', '2.F', '4', '1.C', '1.A', '3.A', '1.B.1', '2', '2.A', '2.B', '2.C', '2.E', 'M.AG', 'M.AG.ELV']:
+        variable_name_to_display = gas_name + ' ' + sector_codes.loc[raw_sector]['2'] + ' ' + sector_codes.loc[raw_sector]['3']
+    else:
+        print('The sector code introduced is incorrect. Please include a valid sector code.')
+
+    # Output file
+    proc_data_fname = source_name + '_' + variable_name_to_display.replace(' ', '_') + '.csv'
+
+    return variable_name_to_display, proc_data_fname, source_name
