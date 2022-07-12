@@ -3,9 +3,10 @@
 
 from countrygroups import UNFCCC, EUROPEAN_UNION, ANNEX_ONE, NON_ANNEX_ONE
 
-### Selecting the data (mostly in the script prepare-PRIMAP-hist-data-for-collective-progress-plots.ipynb)
+####        1. PROCESSING EMISSIONS DATASET        ####
 
-# INPUT REQUIRED
+# Include information below about the emissions dataset. The emissions dataset will be filtered to include
+# the specified data. The processed dataset is ready for plotting in step 3.
 
 # Include extrapolated data? Yes = True, No = False
 include_extrapolated_data = True
@@ -23,10 +24,10 @@ else:
 version = '2.3.1'
 
 # Select here the gas to plot (for more info, see the gas_names dictionary below)
-raw_entity = 'N2O'
+raw_entity = 'CO2'
 
 # Select here the sector to plot (for more info, see the sector_names dictionary below)
-raw_sector = '2'
+raw_sector = 'M.0.EL'
 
 # Select here the type of data that you want to plot.
     # Options are 'HISTCR' (country-reported) and 'HISTTP' (third-party).
@@ -46,18 +47,37 @@ start_year = int(years_of_interest[0])
 # Do you want to save the plots as files? Yes = True, No = False
 save_opt = True
 
-## End of INPUT REQUIRED ##
+####        2. PROCESSING SECONDARY DATASET     ####
 
-# For the 2-calculate_indicators script
-## INPUT REQUIRED ##
+# Here include data about a secondary dataset, in case you want to plot a relative indicator (e.g., per capita)
 
-# Update here the names of non-emission datasets
-# This is the name of the population dataset from the WB, which you can paste below: 'API_SP.POP.TOTL_DS2_en_csv_v2_4218816.csv'
-# This is the name of the GDP dataset from the WB, which you can paste below: 'API_NY.GDP.MKTP.CD_DS2_en_csv_v2_4150784.csv'
-raw_other_dataset = 'API_SP.POP.TOTL_DS2_en_csv_v2_4218816.csv'
+# Plotting absolute or relative emissions data? (In case you want to plot a relative indicator, set to False.)
+absolute = False
+
+# Select here whether the secondary dataset contains population data, GDP data, or none
+population = True
+gdp = False
+
+# Change here the name of the population dataset and update its name
+population_fname = 'API_SP.POP.TOTL_DS2_en_csv_v2_4218816.csv'
+population_dset_name = 'Population_World_Bank_250522'
+
+# Change here the name of the GDP dataset and update its name
+gdp_fname = 'API_NY.GDP.MKTP.CD_DS2_en_csv_v2_4150784.csv'
+gdp_dset_name = 'GDP_World_Bank_250522'
+
+# Change here the name of the secondary dataset (when population and GDP are both false)
+    # the name of the dataset, and the unit name
+other_fname = ''
+other_dset_name = ''
+other_dset_unit = ''
+
+# The program will divide the emissions dataset by the secondary dataset. Do you want to convert the
+# resulting dataset from t[gas] to kt[gas]?
+convert_unit = False
 
 
-## Dictionaries of sectors and gases ##
+####        I. Dictionaries of sectors and gases        ####
 
 # These are the different options that you can choose for the name of the gas
 # and for the sector code. The different options are in the column on the left.

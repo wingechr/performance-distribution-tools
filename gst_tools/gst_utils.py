@@ -371,3 +371,53 @@ def get_primap_variable_and_and_file_name(gas_name, raw_sector, raw_scenario, ds
     proc_data_fname = source_name + '_' + variable_name_to_display.replace(' ', '_') + '.csv'
 
     return variable_name_to_display, proc_data_fname, source_name
+
+# EPO
+def define_dataset(population_fname, gdp_fname, other_fname, population_dset_name, gdp_dset_name, other_dataset_name, pop, gdp):
+    if pop == True and gdp == False:
+        raw_other_dataset = population_fname
+        dset_name = population_dset_name
+        return raw_other_dataset, dset_name
+    elif gdp == True and pop == False:
+    # Change here the name of the GDP dataset
+        raw_other_dataset = gdp_fname
+        dset_name = gdp_dset_name
+        return raw_other_dataset, dset_name
+    elif gdp == False and pop == False:
+    # Change here the name of the other dataset
+        raw_other_dataset = other_fname
+        dset_name = other_dataset_name
+        return raw_other_dataset, dset_name
+    else:
+        print('Error. Please check the options selected to define the secondary dataset (only one can be true).')
+
+# moved by EPO
+def convert_to_kt(new_df, population, gdp, other_unit='None'):
+    if population == True:
+        desired_unit = 'ktCO2/capita'
+    elif gdp == True:
+        desired_unit = 'ktCO2/USD'
+    else:
+        desired_unit = 'ktCO2/' + other_unit
+    
+    
+    conversion_factor = 1000
+    # For reference: 
+    # * 1 Gg / Thousand Pers = 1 t / person
+
+    conv_df = new_df.copy()
+    org_unit = new_df['unit'].unique()
+
+    print('*******************')
+    print('Converting unit from "' + org_unit + '" to "' + desired_unit + 
+          '" using a conversion factor of ' + str(conversion_factor))
+    print('*******************')
+
+    conv_df['unit'] = desired_unit
+    
+    # convert the data
+    conv_df, other_cols = set_non_year_cols_as_index(conv_df)
+    conv_df = conv_df * conversion_factor
+    conv_df = conv_df.reset_index()
+
+    return conv_df

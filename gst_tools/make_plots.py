@@ -173,7 +173,10 @@ def make_histogram(df, unit_,
 
         iqr = q75 - q25
 
-        bin_width = 1#int(2 * (iqr) / (npts ** (1 / 3)))
+        if (int(2 * (iqr) / (npts ** (1 / 3)))) != 0:
+            bin_width = int(2 * (iqr) / (npts ** (1 / 3)))
+        else:
+            bin_width = 1
 
         # or the simple 'excel' rule:
         # bin_width = int(full_range / np.ceil(npts**(0.5)))
