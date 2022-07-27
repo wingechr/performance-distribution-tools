@@ -11,6 +11,7 @@
 # =====================================================
 
 import re, sys, os
+import logging
 
 import pandas as pd
 import numpy as np
@@ -88,16 +89,14 @@ def make_histogram(df, unit_,
     """
 
     # announce the plot..
-    print('---------')
-    print('Making  ' + str(plot_name) + ' plot.')
-    print('---------')
+    logging.debug('---------')
+    logging.debug('Making  ' + str(plot_name) + ' plot.')
+    logging.debug('---------')
 
     # Check the data - needs to not be, for example, all zeros
     if len(df.unique()) == 1:
-        print('---------')
-        print('All values in the series are the same! Exiting plotting routine for ' + str(plot_name))
-        print('---------')
-        return
+        raise ValueError('All values in the series are the same! Exiting plotting routine for ' + str(plot_name))
+        
 
     # get the value here in case it's excluded as an outlier
     if selected_country:
@@ -126,8 +125,8 @@ def make_histogram(df, unit_,
         # k = 1.5 -> outlier; k = 3 -> far out
         # TODO - get full and proper reference for this!!!
 
-        print('-----------')
-        print('Identifying and removing outliers')
+        logging.debug('-----------')
+        logging.debug('Identifying and removing outliers')
 
         # calculate limits
         q75, q25 = np.percentile(df, [75, 25])
@@ -135,17 +134,17 @@ def make_histogram(df, unit_,
         tukey_min = q25 - ktuk * iqr
         tukey_max = q75 + ktuk * iqr
         # for testing:
-        # print('tukey_min is ' + str(tukey_min))
-        # print('tukey_max is ' + str(tukey_max))
+        # logging.debug('tukey_min is ' + str(tukey_min))
+        # logging.debug('tukey_max is ' + str(tukey_max))
 
         # Tell the user what the outliers are:
         lower_outliers = df[df < tukey_min]
-        print('lower outliers are:')
-        print(lower_outliers)
+        logging.debug('lower outliers are:')
+        logging.debug(lower_outliers)
         upper_outliers = df[df > tukey_max]
-        print('upper outliers are: ')
-        print(upper_outliers)
-        print('---')
+        logging.debug('upper outliers are: ')
+        logging.debug(upper_outliers)
+        logging.debug('---')
 
         noutliers = len(lower_outliers) + len(upper_outliers)
 
@@ -188,7 +187,7 @@ def make_histogram(df, unit_,
 
         # determine bin edges
         bins_calc = range(int((0 - (1 + nbins / 2) * bin_width)), int((0 + (1 + nbins / 2) * bin_width)), bin_width)
-        print('bins set to ' + str(bins_calc))
+        logging.debug('bins set to ' + str(bins_calc))
 
     else:
         if maximum < 25:
@@ -203,7 +202,7 @@ def make_histogram(df, unit_,
 
             # determine bin edges
             bins_calc = range(0, int(1 + nbins), bin_width)
-            print('bins set to ' + str(bins_calc))
+            logging.debug('bins set to ' + str(bins_calc))
 
         else:
             # use inbuilt Freedman-Diaconis
@@ -323,8 +322,7 @@ def make_histogram(df, unit_,
         plt.savefig(filename, format='png', dpi=600, bbox_inches='tight')
         plt.close()
 
-    # show the plot
-    plt.show()
+    return plt
 
 
 def make_histogram_peaking(df, var, unit_, start_year, end_year, save_plot=False):
@@ -341,11 +339,8 @@ def make_histogram_peaking(df, var, unit_, start_year, end_year, save_plot=False
 
     # Check the data - needs to not be, for example, all zeros
     if len(df.unique()) == 1:
-        print('---------')
-        print('All values in the series are the same! Exiting plotting routine for ' + str(var))
-        print('---------')
-        return
-
+        raise ValueError('All values in the series are the same! Exiting plotting routine for ' + str(var))
+        
     # set a style
     sns.set(style="darkgrid")
 
@@ -416,8 +411,7 @@ def make_histogram_peaking(df, var, unit_, start_year, end_year, save_plot=False
         plt.savefig(filename, format='png', dpi=450, bbox_inches='tight')
         plt.close()
 
-    # show the plot
-    plt.show()
+    return plt
 
 
 def plot_facet_grid_countries(df, variable, value, main_title='', plot_name='', save_plot=False):
@@ -480,6 +474,8 @@ def plot_facet_grid_countries(df, variable, value, main_title='', plot_name='', 
         filename = os.path.join(filepath, fname)
         plt.savefig(filename, format='pdf', bbox_inches='tight')
         plt.close()
+    
+    return plt
 
 
 def peaking_barplot(summary_data, variable, max_year, save_plot=False):
@@ -514,4 +510,6 @@ def peaking_barplot(summary_data, variable, max_year, save_plot=False):
         filename = os.path.join(filepath, fname)
         plt.savefig(filename, format='png', dpi=600, bbox_inches='tight')
         plt.close()
+    
+    return plt
 
