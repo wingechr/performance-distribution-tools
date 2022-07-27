@@ -1,1 +1,0 @@
-PRIMAP-histcr_v2.3.1_Population_World_Bank_250522_Total CO2 emissions (excl. LULUCF)-per-Population, total.csv

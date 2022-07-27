@@ -1,85 +1,49 @@
-# %% [markdown]
-# ### 1. Please update the names of any of the datasets that will be used for plotting:
+from countrygroups import UNFCCC, EUROPEAN_UNION, ANNEX_ONE, NON_ANNEX_ONE
 
-# %% [markdown]
-# #### 1a. Emissions data from Primap
 
-# %%
-# Primap emissions data without extrapolation
-primap_extrap_fname = 'Guetschow-et-al-2021-PRIMAP-hist_v2.3.1_20-Sep_2021.csv'
+# ======================
+# Setup of parameters
+# ======================
 
-# Primap emissions data with extrapolation
-primap_no_extrap_fname = 'Guetschow-et-al-2021-PRIMAP-hist_v2.3.1_no_extrap_20-Sep_2021.csv'
-
-primap_source = 'PRIMAP-hist v2.3.1'
-
-# %% [markdown]
-# #### 1b. Energy data from bp
-
-# %%
-# Data must be in "panel" format
-bp_world_energy_panel_fname = 'bp-stats-review-2022-consolidated-dataset-panel-format.csv'
-
-bp_source = 'bp Statistical Review\n of World Energy 2022'
-
-# %% [markdown]
-# #### 1c. Population and GDP data from the World Bank
-
-# %%
-# Population dataset
-wb_population_fname = 'API_SP.POP.TOTL_DS2_en_csv_v2_4218816.csv'
-
-# GDP dataset
-wb_gdp_fname = 'API_NY.GDP.MKTP.CD_DS2_en_csv_v2_4150784.csv'
-
-# %% [markdown]
-# ### 2. Please select the data that you want to plot:
-
-# %%
-# Select country groups from this list. You can input the group itself or countries within the groups using ISO 3166 alpha-3 country codes.
+# Please select country groups from this list. You can input the group itself or countries within the groups using ISO 3166 alpha-3 country codes.
 # For example:
     # countries = UNFCCC (includes all countries in the UNFCCC)
     # countries = ['EGY', 'GRC', 'EUU', 'COL'] (includes Egypt, Greece, European Union, and Colombia)
-from countrygroups import UNFCCC, EUROPEAN_UNION, ANNEX_ONE, NON_ANNEX_ONE
 
 countries = UNFCCC
 
-# Select the years that you want to plot:
-#years_of_interest = ['1990', '2005', '2016']
+# Select the year that you want to plot:
+
 year_of_interest = '2016'
 
 # In case of plotting difference from a baseline year, specify the baseline year here:
+
 baseline_year = '1990'
 
 # Select the data that you want to plot.
 #   Options are:    'emissions' (uses Primap-hist data)
 #                   'energy' (uses bp data)
+
 data = 'emissions'
 
-# %%
-# If plotting emissions data, please select whether you want to include extrapolated data.
-extrapol = True
-
-# %%
 # If plotting Primap emissions data, please select the type of gas that you want to plot.
 # These are the options:
 #   'CH4'
 #   'CO2'
 #   'N2O'
-#   'HFCS (SARGWP100)' (as defined in AR2)
-#   'HFCS (AR4GWP100)' (as defined in AR4)
-#   'PFCS (SARGWP100)' (as defined in AR2)
-#   'PFCS (AR4GWP100)' (as defined in AR4)
+#   'HFCS (SARGWP100)' (as estimated in AR2)
+#   'HFCS (AR4GWP100)' (as estimated in AR4)
+#   'PFCS (SARGWP100)' (as estimated in AR2)
+#   'PFCS (AR4GWP100)' (as estimated in AR4)
 #   'SF6'
 #   'NF3'
-#   'FGASES (SARGWP100)' (as defined in AR2)
-#   'FGASES (AR4GWP100)' (as defined in AR4)
-#   'KYOTOGHG (SARGWP100)' (as defined in AR2)
-#   'KYOTOGHG (AR4GWP100)' (as defined in AR4)
+#   'FGASES (SARGWP100)' (as estimated in AR2)
+#   'FGASES (AR4GWP100)' (as estimated in AR4)
+#   'KYOTOGHG (SARGWP100)' (as estimated in AR2)
+#   'KYOTOGHG (AR4GWP100)' (as estimated in AR4)
    
 primap_gas = 'KYOTOGHG (AR4GWP100)'
 
-# %%
 # If plotting Primap emissions data, please select the sector that you want to plot.
 # These are the available sectors:
 # 'M.0.EL'      (Total excluding LULUCF)
