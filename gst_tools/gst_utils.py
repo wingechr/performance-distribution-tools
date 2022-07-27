@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 from shortcountrynames import to_name
 
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -30,7 +31,7 @@ def rename_bp(raw_bp):
     raw_data_renamed = raw_bp.rename(columns={
                         'ISO3166_alpha3': 'country',
                         'Year': 'year'}, inplace=False)
-    raw_data_renamed = raw_data_renamed.astype({'year': str})
+    raw_data_renamed = raw_data_renamed.astype({'year': str})  
     return raw_data_renamed
 
 def calculate_energy_use(renamed_bp):
@@ -55,7 +56,7 @@ def calculate_ren_elec_share(renamed_bp):
 
     total = renamed_bp['electbyfuel_total']
     
-    share = renewables/total*100
+    share = (renewables/total)*100
 
     new_df = renamed_bp.copy()
     new_df['ren_elec_share_%'] = share
@@ -68,7 +69,7 @@ def calculate_ff_share(renamed_bp):
     ff_cons = renamed_bp['coalcons_ej'] + renamed_bp['gascons_ej'] + renamed_bp['oilcons_ej']
     
     new_df = renamed_bp.copy()
-    new_df['ff_cons_share_%'] = ff_cons/total_consumption
+    new_df['ff_cons_share_%'] = (ff_cons/total_consumption)*100
 
     print('Added share of fossil fuel energy consumed. Unit: %')
     return new_df
@@ -86,8 +87,11 @@ def filter_bp(renamed_bp, energy_variable, countries, start_year):
             filtered['variable'] = ['Share of renewable power']*len(filtered)
             filtered['unit'] = ['%']*len(filtered)
         elif energy_variable == 2:
-            # TODO
             filtered = calculate_ff_share(renamed_bp)
+            filtered = filtered[['country', 'ff_cons_share_%', 'year']]
+            filtered = filtered.pivot(index='country', columns='year', values='ff_cons_share_%').reset_index().rename_axis(None, axis=1)
+            filtered['variable'] = ['Share of fossil primary energy consumed']*len(filtered)
+            filtered['unit'] = ['%']*len(filtered)
         elif energy_variable == 3:
             filtered = calculate_energy_use(renamed_bp)
             filtered = filtered[['country','energy_use_ej', 'year']]
@@ -247,6 +251,28 @@ def define_primap_variable_name(sector_code, gas, dict_gas_var, primap_sectors='
 
     return variable_name
 
+def calculate_diff_since_yearX(df_abs, yearX):
+
+    """
+    Calculates in absolute and relative terms the difference between data in all years compared to the specified year.
+    For example, % difference relative to 1990 in all years.
+    """
+
+    print('Calculating difference compared to ' + yearX)
+
+    # first, check that the desired year is in the data!
+    if yearX not in df_abs.columns:
+        print('The year you have selected for relative calculations ('
+              + str(yearX) + ') is not available, please try again.')
+        return
+
+    # calculate all columns relative to the chosen year, first in absolute terms, then %
+    df_abs_diff = df_abs.subtract(df_abs[yearX], axis='index')
+    # print(df_abs_diff)
+    df_perc_diff = 100 * df_abs_diff.divide(df_abs[yearX], axis='index')
+    # print(df_perc_diff)
+
+    return df_abs_diff, df_perc_diff
 
 def set_countries_as_index(df):
 
@@ -338,12 +364,31 @@ def define_primap_proc_fname(primap_filtered, gas_dict, sect_dict):
     return proc_fname
 
 def define_bp_proc_fname(proc_data):
-    source = 'bp_stat_rev_world_energy'
+    source = 'bp_stat_rev_world_energy_2022'
     variable = proc_data['variable'][0]
 
     proc_fname = source + '_' + variable.replace(' ', '_').lower() + '.csv'
 
     return proc_fname
+
+def define_plot_name(type, variable, year_of_interest, baseline_year, output_folder):
+    if type != 1 and type != 2 and type != 3 and type != 4:
+        print('Error: Please provide a valid plot type (either 1, 2, 3 or 4).')
+        return
+    else:
+        if type == 1:
+            type_text = 'Distribution in ' + str(year_of_interest)
+        elif type == 2:
+            type_text = 'Change since ' + str(baseline_year)
+        elif type == 3:
+            type_text = 'Average annual change'
+        elif type == 4:
+            type_text = 'Year of peaking'
+        #plot_name = type_text + variable.lower()
+        fname = output_folder + (type_text.lower() + ' ' + variable.lower()).replace(' ', '_') + '.png'
+
+        return type_text, fname
+
 
 def write_to_file(proc_data, proc_folder, proc_fname):
     # First ensure that years, unit, 'country', and variable are all in data. If they are can proceed to print data
@@ -500,7 +545,7 @@ def normalise(proc_data, normalising_dset, per_capita_or_per_usd):
     else:
         # LOU Get metadata for later use and checking
         var1_name = var1['variable'].unique()[0]
-        var2_name = var2['variable'].unique()[0]
+        #var2_name = var2['variable'].unique()[0]
 
         var1_unit  = var1['unit'].unique()[0]
         var2_unit = var2['unit'].unique()[0]
@@ -511,7 +556,7 @@ def normalise(proc_data, normalising_dset, per_capita_or_per_usd):
         data_normalised = var1 / var2
 
         # LOU Generate new metadata
-        new_variable_name = var1_name + '-per-' + var2_name
+        new_variable_name = var1_name + ' ' + per_capita_or_per_usd
 #with open('gst_tools/name_relative_variable.txt', 'w') as f:
  #   f.write(new_variable_name)
         data_normalised['variable'] = new_variable_name
@@ -563,9 +608,15 @@ def convert_norm(normalised_dset, data, per_capita_or_per_usd):
             desired_unit = 't' + gas_unit + ' ' + per_capita_or_per_usd
 
             conversion_factor = 1000000
+            if per_capita_or_per_usd == 'per USD':
+                conversion_factor = 1000000 *(10**3)
+                desired_unit = 'kg' + gas_unit + ' ' + per_capita_or_per_usd
         elif data == 'energy':
             desired_unit = 'J' + ' ' + per_capita_or_per_usd
             conversion_factor = 10**9
+            if per_capita_or_per_usd == 'per USD':
+                conversion_factor = 10**12
+                desired_unit = 'mJ' + ' ' + per_capita_or_per_usd
 
         print('*******************')
         print('Converting unit from "' + org_unit + '" to "' + desired_unit + 
@@ -581,7 +632,7 @@ def convert_norm(normalised_dset, data, per_capita_or_per_usd):
 
         return conv_df
 
-def prepare_for_plotting(final_dset):
+def prepare_for_plotting(final_dset, plot_type):
     if not verify_data_format(final_dset):
         print('WARNING: The data is not correctly formatted! Please check before continuing!')
     # LOU Extract the key information
@@ -594,7 +645,36 @@ def prepare_for_plotting(final_dset):
         data_years = data_years.dropna(axis=1, how='all')
         data_years = data_years.dropna(axis=0, how='any')
 
-        return data_years, variable, unit
+        if plot_type == 4:
+            year_max = data_years.idxmax(axis=1)
+            year_max = pd.to_numeric(year_max)
+            year_max.name = 'peak year'
+
+            start_year = min(list(map(int, data_years.columns)))
+            end_year = max(list(map(int, data_years.columns)))
+
+            return year_max, start_year, end_year, data_years, variable, unit
+
+        else:
+            return data_years, variable, unit
+
+def calculate_trends(df, num_years_trend=5):
+
+    """
+    Calculates the annual percentage change and also the rolling average over the specified number of years.
+    """
+
+    # disp average used for trend
+    print('Averaging trend over ' + str(num_years_trend) + ' years.')
+
+    # calculate annual % changes
+    df_perc_change = df.pct_change(axis='columns') * 100
+    new_unit = '%'
+
+    # average over a window
+    df_rolling_average = df_perc_change.rolling(window=num_years_trend, axis='columns').mean()
+
+    return df_perc_change, df_rolling_average, new_unit
 
 def get_uba_colours():
 
@@ -678,8 +758,8 @@ def eliminate_outliers(series, ktuk=3):
 
 def get_plot_stats(series):
     # get some basic info about the data to use for setting styles, calculating bin sizes, and annotating plot
-    maximum = max(series)
-    minimum = min(series)
+    maximum = int(max(series))
+    minimum = int(min(series))
     mean = np.mean(series)
     median = np.median(series)
     npts = len(series)
@@ -829,10 +909,198 @@ def annotate_plot(axs, xlabel, title, unit, sourcename, maximum, minimum, mean, 
     axs.set_ylabel('Number of countries', fontsize=12)
     axs.set_title((title + "\n"), fontweight='bold')
 
-def make_histogram(df, year, unit, xlabel='', variable_title='', 
-                sourcename='unspecified', save_plot=True, output_folder='output/',
+
+def plot_facet_grid_countries(df, variable, value, main_title='', plot_name='', save_plot=False):
+
+    """
+    plot a facet grid of variables for a range of countries. Can be used to, e.g. assess
+    which countries have emissions that have peaked, and which not.
+    """
+
+    uba_palette = set_uba_palette()
+    sns.set_palette(uba_palette)
+    sns.set(style="darkgrid", context="paper")
+    uba_colours = get_uba_colours()
+    sns.set(font="Calibri")
+
+    # First, get some idea of the data so that it's easier to make clean plots
+    ranges = df.max(axis=1) - df.min(axis=1)
+    check = (ranges.max() - ranges.min()) / ranges.min()
+    if abs(check) < 8:
+        yshare = True
+    else:
+        yshare = False
+
+    # set up the df for plotting
+    year_cols = df.columns
+    dftomelt = df.reset_index()
+    dftomelt['country'] = dftomelt['country'].apply(to_name)
+    dfmelt = pd.melt(dftomelt, id_vars=['country'],
+                     value_vars=year_cols, var_name=variable, value_name=value)
+
+    # set up the grid
+    grid = sns.FacetGrid(dfmelt, col='country', palette="tab20c", sharey=yshare,
+                         col_wrap=4, aspect=1)
+
+    # make the actual plots
+    grid.map(sns.lineplot, variable, value, color=uba_colours['uba_dark_purple'])
+
+    # Give subplots nice titles
+    grid.set_titles(col_template='{col_name}')
+
+    # tidy up a bit
+    for ax in grid.axes.flat:
+        ax.xaxis.set_major_locator(mpl.ticker.MaxNLocator(4, prune="both"))
+        ax.yaxis.set_major_locator(mpl.ticker.MaxNLocator(4, prune="both"))
+        ax.axhline(0, color='k')
+    if yshare:
+        grid.fig.subplots_adjust(hspace=.15, wspace=.1, top=.95)
+    else:
+        grid.fig.subplots_adjust(hspace=.15, wspace=.25, top=.95)
+
+    # give the whole plot a title
+    grid.fig.suptitle(main_title, fontweight='bold', fontsize=15)
+
+    if save_plot:
+        filepath = os.path.join('output', 'plots')
+        # grid.map(horiz_zero_line)
+        fname = ('facetgrid-' + plot_name + '-' + value + '.pdf')
+        if not os.path.exists(filepath):
+            os.makedirs(filepath)
+        filename = os.path.join(filepath, fname)
+        plt.savefig(filename, format='pdf', bbox_inches='tight')
+        plt.close()
+
+def peaking_barplot(summary_data, variable, max_year, save_plot=False):
+
+    uba_palette = set_uba_palette()
+    sns.set_palette(uba_palette)
+    sns.set(style="darkgrid", context="paper")
+    sns.set(font="Calibri")
+
+    # make histogram
+    fig, ax = plt.subplots()
+
+    splot= sns.barplot(x=summary_data['category'], y=summary_data['count'],
+                       alpha=0.85, palette=uba_palette)
+
+    for p in splot.patches:
+        splot.annotate(format(p.get_height(), '.0f'),
+                  (p.get_x() + p.get_width() / 2., p.get_height()),
+                  ha='center', va='center',
+                  xytext=(0, 10), textcoords='offset points')
+
+    plt.tight_layout
+    plt.xlabel('')
+    plt.ylabel('number of countries')
+    plt.title("Status of " + variable + "\nin " + max_year)
+
+    if save_plot:
+        filepath = os.path.join('output', 'plots')
+        fname = ('peaking-categories-' + variable + '.png')
+        if not os.path.exists(filepath):
+            os.makedirs(filepath)
+        filename = os.path.join(filepath, fname)
+        plt.savefig(filename, format='png', dpi=600, bbox_inches='tight')
+        plt.close()
+
+
+def make_histogram_peaking(df, var, unit_, start_year, end_year, save_plot=False):
+
+    """
+    This function is specifically written to plot the peaking year of a variable for a range
+    of countries.
+    """
+
+    uba_palette = set_uba_palette()
+    sns.set_palette(uba_palette)
+    sns.set(style="darkgrid", context="paper")
+    sns.set(font="Calibri")
+
+    # Check the data - needs to not be, for example, all zeros
+    if len(df.unique()) == 1:
+        print('---------')
+        print('All values in the series are the same! Exiting plotting routine for ' + str(var))
+        print('---------')
+        return
+
+    # set a style
+    sns.set(style="darkgrid")
+
+    # STATS
+    # get some basic info about the data to use for setting styles, calculating bin sizes, and annotating plot
+    maximum = int(max(df))
+    minimum = int(min(df))
+    mean = np.mean(df)
+    median = np.median(df)
+    npts = len(df)
+
+    # determine bin edges - annual!
+    bin_width = 1
+    bins_calc = range((start_year - 1), (end_year + 2), bin_width)
+
+    # --------------
+    # MAKE THE PLOT
+
+    # set up the figure
+    fig, axs = plt.subplots()
+
+    uba_colours = get_uba_colours()
+
+    # make histogram
+    N, bins, patches = axs.hist(df, bins=bins_calc,
+                                edgecolor='white', linewidth=1)
+
+    for i in range(0, len(patches)):
+        patches[i].set_facecolor(uba_colours['uba_dark_purple'])
+    patches[-1].set_facecolor(uba_colours['uba_bright_orange'])
+    patches[-1].set_alpha(0.5)
+
+    # Dynamically set x axis range to make symmetric abut 0
+    if minimum < 0:
+        # get and reset xmin or xmax
+        xmin, xmax = axs.get_xlim()
+        if np.absolute(xmax) > np.absolute(xmin):
+            plt.xlim(-xmax, xmax)
+        else:
+            plt.xlim(xmin, -xmin)
+
+        # and add a line at 0
+        axs.axvline(linewidth=1, color='k')
+
+    # number of countries in the last bin
+    nlast = N[-1]
+
+    # Annotate the plot with stats
+    axs.annotate(("{:.0f} countries, ".format(npts) +
+                  "\nof which {:.0f} have ".format(nlast) +
+                  "\nnot yet reached a maximum (orange)"),
+                 xy=(0.03, 0.82), xycoords=axs.transAxes,
+                 fontsize=10, color='black',
+                 bbox=dict(facecolor='white', edgecolor='grey', alpha=0.75))
+
+    # label axes and add title
+    axs.set_xlabel('year')
+    axs.set_ylabel('number of countries')
+    axs.set_title(('year when ' + var + ' peaked'), fontweight='bold')
+
+    # save to file
+    if save_plot:
+        filepath = os.path.join('output', 'plots')
+        fname = ('basic_histogram-peaking-since-' + str(start_year) + '-' + var + '.png')
+        if not os.path.exists(filepath):
+            os.makedirs(filepath)
+        filename = os.path.join(filepath, fname)
+        plt.savefig(filename, format='png', dpi=450, bbox_inches='tight')
+        plt.close()
+
+    # show the plot
+    plt.show()
+
+def make_histogram(df, year, unit, plot_type=0, xlabel='', variable_title='', 
+                sourcename='unspecified', save_plot=True, filepath='',
                 remove_outliers=True, ktuk=3,
-                plot_name='', selected_country=''):
+                plot_name='', selected_country='', dpi=600):
 
     """
     This is based on the make_simple_histogram function but caters to data that
@@ -853,7 +1121,10 @@ def make_histogram(df, year, unit, xlabel='', variable_title='',
     print('Making plot for: ' + str(plot_name))
     print('---------')
 
-    series = df[str(year)]
+    if plot_type == 1 or plot_type == 2:
+        series = df[str(year)]
+    else:
+        series = df.iloc[:,-1]
 
     # Check the data - needs to not be, for example, all zeros
     if len(series.unique()) == 1:
@@ -905,17 +1176,18 @@ def make_histogram(df, year, unit, xlabel='', variable_title='',
     annotate_plot(axs, xlabel, title, unit, sourcename, maximum, minimum, mean, median, npts, remove_outliers, noutliers)
 
     # save to file
+    
+    
+    
     if save_plot:
-        filepath = output_folder
         if selected_country:
-            fname = ('basic_histogram-' + plot_name + '-' + to_name(selected_country) + '.png')
-        else:
-            fname = ('basic_histogram-' + plot_name + '.png')
-        if not os.path.exists(filepath):
-            os.makedirs(filepath)
-        filename = os.path.join(filepath, fname)
-        plt.savefig(filename, format='png', dpi=600, bbox_inches='tight')
+            filepath = filepath.replace('/', '/' + to_name(selected_country))
+
+        #if not os.path.exists(filepath):
+        #    os.makedirs(filepath)
+        #filename = os.path.join(filepath, fname)
+        plt.savefig(filepath, format='png', dpi=dpi, bbox_inches='tight')
         plt.close()
 
     # show the plot
-    plt.show()
+    return plt

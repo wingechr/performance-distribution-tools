@@ -11,12 +11,16 @@ primap_extrap_fname = 'Guetschow-et-al-2021-PRIMAP-hist_v2.3.1_20-Sep_2021.csv'
 # Primap emissions data with extrapolation
 primap_no_extrap_fname = 'Guetschow-et-al-2021-PRIMAP-hist_v2.3.1_no_extrap_20-Sep_2021.csv'
 
+primap_source = 'PRIMAP-hist v2.3.1'
+
 # %% [markdown]
 # #### 1b. Energy data from bp
 
 # %%
 # Data must be in "panel" format
 bp_world_energy_panel_fname = 'bp-stats-review-2022-consolidated-dataset-panel-format.csv'
+
+bp_source = 'bp Statistical Review\n of World Energy 2022'
 
 # %% [markdown]
 # #### 1c. Population and GDP data from the World Bank
@@ -41,7 +45,11 @@ from countrygroups import UNFCCC, EUROPEAN_UNION, ANNEX_ONE, NON_ANNEX_ONE
 countries = UNFCCC
 
 # Select the years that you want to plot:
-years_of_interest = ['1990', '2005', '2016']
+#years_of_interest = ['1990', '2005', '2016']
+year_of_interest = '2016'
+
+# In case of plotting difference from a baseline year, specify the baseline year here:
+baseline_year = '1990'
 
 # Select the data that you want to plot.
 #   Options are:    'emissions' (uses Primap-hist data)
@@ -74,7 +82,7 @@ primap_gas = 'KYOTOGHG (AR4GWP100)'
 # %%
 # If plotting Primap emissions data, please select the sector that you want to plot.
 # These are the available sectors:
-# 'M.0.EL' (Total excluding LULUCF)
+# 'M.0.EL'      (Total excluding LULUCF)
 # '1'           (Energy)
 # '1.A'         (Fuel combustion)
 # '1.B'         (Fugitive emissions from energy production)
@@ -110,7 +118,7 @@ primap_scenario = 'HISTCR'
 # %%
 # If plotting energy data, please select the variable that you want to plot
 # Options are:      1: Share of renewables in electricity
-#                   2: Share of fossil fuels in TPES
+#                   2: Share of fossil fuels in primary energy consumed
 #                   3: Energy use
 energy_variable = 3
 
@@ -126,6 +134,11 @@ data_type = 'absolute'
 # %%
 # IN PROGRESS
 # Select the type of plot that you want to create:
-# Options are:
+# Options are:      1: Distribution of variable in specified year.
+#                   2: Change of variable since specified year.
+#                   3: Rolling average trend
+#                   4: Year of peaking
+
+plot_type = 4
 
 
