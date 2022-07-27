@@ -1,6 +1,7 @@
 import re
 #import sys
 import os
+import logging
 
 import pandas as pd
 import numpy as np
@@ -13,7 +14,7 @@ import seaborn as sns
 
 def load_data(folder, fname):
     file_path = os.path.join(folder, fname)
-    print('Reading ' + file_path)
+    logging.debug('Reading ' + file_path)
     raw_data = pd.read_csv(file_path)
     return raw_data
 
@@ -41,7 +42,7 @@ def calculate_energy_use(renamed_bp):
 
     new_df['energy_use_ej'] = energy_use
 
-    print('Added primary energy consumption. Unit: Exajoules')
+    logging.debug('Added primary energy consumption. Unit: Exajoules')
     return new_df
 
 def calculate_ren_elec_share(renamed_bp):
@@ -60,7 +61,7 @@ def calculate_ren_elec_share(renamed_bp):
     new_df = renamed_bp.copy()
     new_df['ren_elec_share_%'] = share
 
-    print('Added share of renewables in electricity generated. Unit: %')
+    logging.debug('Added share of renewables in electricity generated. Unit: %')
     return new_df
 
 def calculate_ff_share(renamed_bp):
@@ -70,12 +71,12 @@ def calculate_ff_share(renamed_bp):
     new_df = renamed_bp.copy()
     new_df['ff_cons_share_%'] = ff_cons/total_consumption
 
-    print('Added share of fossil fuel energy consumed. Unit: %')
+    logging.debug('Added share of fossil fuel energy consumed. Unit: %')
     return new_df
 
 def filter_bp(renamed_bp, energy_variable, countries, start_year):
     if energy_variable != 1 and energy_variable != 2 and energy_variable != 3:
-        print('Error. Please provide a valid energy variable (either 1, 2 or 3).')
+        raise ValueError('Error. Please provide a valid energy variable (either 1, 2 or 3).')
     else:
         # Calculate the variables, add them to the dataframe, and pivot the dataframe to only include this variable along with the
         # unit column.
@@ -99,15 +100,15 @@ def filter_bp(renamed_bp, energy_variable, countries, start_year):
         filtered = filtered.loc[filtered['country'].isin(countries)]
         
         if len(filtered.index) == 0:
-            print('There is no data for the countries specified. Please, select different countries.')
+            raise ValueError('There is no data for the countries specified. Please, select different countries.')
         else:
         # Tell the user if any of the needed countries are missing and, if yes, which ones:
             missing_countries = list(set(countries) - set(filtered['country'].unique()))
             if missing_countries:
-                print('Not all countries requested were available in the raw data. You are missing the following:')
+                logging.info('Not all countries requested were available in the raw data. You are missing the following:')
                 for country in missing_countries:
-                    print('   ' + to_name(country))
-                print('---------')
+                    logging.info('   ' + to_name(country))
+                logging.info('---------')
 
             # Reduce to only required years
             filtered = change_first_year(filtered, start_year)
@@ -121,8 +122,8 @@ def filter_bp(renamed_bp, energy_variable, countries, start_year):
             filtered = check_column_order(filtered)
 
             # Check
-            print('These are the 10 first rows of the processed data:')
-            print(filtered.head(10))
+            logging.debug('These are the 10 first rows of the processed data:')
+            logging.debug(filtered.head(10))
 
             return filtered
 
@@ -139,6 +140,9 @@ def change_first_year(df, new_start_year):
     other_cols = list(set(df.columns) - set(year_cols))
 
     # check the current start year
+    if not year_cols:
+        raise ValueError("no years left")
+        
     cur_start_year = min(year_cols)
     last_year = max(year_cols)
 
@@ -168,8 +172,8 @@ def change_first_year(df, new_start_year):
     df = check_column_order(df)
 
     # tell the user what happened
-    print('First year of data available is now ' + str(new_start_year))
-    print('Last year of data available is ' + str(last_year))
+    logging.debug('First year of data available is now ' + str(new_start_year))
+    logging.debug('Last year of data available is ' + str(last_year))
 
     return df
 
@@ -243,7 +247,7 @@ def define_primap_variable_name(sector_code, gas, dict_gas_var, primap_sectors='
     elif sector_code in ['2.D', '2.F', '4', '1.C', '1.A', '3.A', '2', '2.A', '2.B', '2.C', '2.E', 'M.AG', 'M.AG.ELV']:
         variable_name = gas_name + ' ' + sector_codes.loc[sector_code]['2'] + ' ' + sector_codes.loc[sector_code]['3']
     else:
-        print('The sector code in the dataset ("category" column) is wrong. Please check the dataset.')
+        raise ValueError('The sector code in the dataset ("category" column) is wrong. Please check the dataset.')
 
     return variable_name
 
@@ -289,22 +293,22 @@ def filter_primap(renamed_data, gas, sector, scenario, countries, start_year, di
                         ]
     
     if len(proc_primap.index) == 0:
-        print('There is no data for the gas, the sector, and the data source specified. Please, provide new parameters.')
+        raise ValueError('There is no data for the gas, the sector, and the data source specified. Please, provide new parameters.')
 
     else:
     # LOU Reduce the countries or regions to only those desired
         proc_primap = proc_primap.loc[proc_primap['country'].isin(countries)]
 
         if len(proc_primap.index) == 0:
-            print('There is no data for the countries specified. Please, select different countries.')
+            raise ValueError('There is no data for the countries specified. Please, select different countries.')
         else:
         # LOU Tell the user if any of the needed countries are missing and, if yes, which ones:
             missing_countries = list(set(countries) - set(proc_primap['country'].unique()))
             if missing_countries:
-                print('Not all countries requested were available in the raw data. You are missing the following:')
+                logging.info('Not all countries requested were available in the raw data. You are missing the following:')
                 for country in missing_countries:
-                    print('   ' + to_name(country))
-                print('---------')
+                    logging.info('   ' + to_name(country))
+                logging.info('---------')
 
             # LOU Reduce to only required years
             proc_primap = change_first_year(proc_primap, start_year)
@@ -321,8 +325,8 @@ def filter_primap(renamed_data, gas, sector, scenario, countries, start_year, di
             proc_primap = check_column_order(proc_primap)
 
             # EPO Check
-            print('These are the 10 first rows of the processed data:')
-            print(proc_primap.head(10))
+            logging.debug('These are the 10 first rows of the processed data:')
+            logging.debug(proc_primap.head(10))
 
             return proc_primap
 
@@ -349,7 +353,7 @@ def write_to_file(proc_data, proc_folder, proc_fname):
     # First ensure that years, unit, 'country', and variable are all in data. If they are can proceed to print data
     # WARNING What about other things to check?
     if 'country' not in proc_data.columns or 'unit' not in proc_data.columns:
-        print('Missing required information! Please check your input data and processing!')
+        raise ValueError('Missing required information! Please check your input data and processing!')
     else:
         fullfname_out = os.path.join(proc_folder, proc_fname)
 
@@ -361,7 +365,7 @@ def write_to_file(proc_data, proc_folder, proc_fname):
     proc_data.to_csv(fullfname_out, index=False)
 
     # celebrate success 
-    print('Processed data written to file! - ' + fullfname_out)
+    logging.debug('Processed data written to file! - ' + fullfname_out)
 
 def rearrange_wb_data(input_folder, wb_dset_fname):
     dset = pd.read_csv(os.path.join(input_folder, wb_dset_fname), header=2)
@@ -410,8 +414,8 @@ def ensure_common_countries(df1, df2):
     df2_countries = df2['country'].unique()
     common_countries = list(set(df1_countries).intersection(df2_countries))
 
-    print('Common countries are: ')
-    print(common_countries)
+    logging.debug('Common countries are: ')
+    logging.debug(common_countries)
     # TODO - spit out list of countries not found!
 
     # reset matrices
@@ -438,32 +442,32 @@ def verify_data_format(df):
     if column_check:
         verified = True
     else:
-        print('Missing columns in dataframe! Columns missing are:')
-        print(set(columns_required) - set(list(df.columns)))
+        logging.warning('Missing columns in dataframe! Columns missing are:')
+        logging.warning(set(columns_required) - set(list(df.columns)))
         verified = False
         return verified
 
     # check the uniqueness of the data
     if len(df['variable'].unique()) != 1:
-        print('WARNING: the "variable" is non-unique! Please check your input data!')
+        logging.warning('WARNING: the "variable" is non-unique! Please check your input data!')
         verified = False
         return verified
 
     if len(df['unit'].unique()) != 1:
-        print('WARNING: the "units" are non-unique! Please check your input data!')
+        logging.warning('WARNING: the "units" are non-unique! Please check your input data!')
         verified = False
         return verified
 
     # check that no countries are repeated
     if len(df['country'].unique()) != len(df['country']):
-        print('WARNING: Some countries appear to be repeated! Please check your input data!')
+        logging.warning('WARNING: Some countries appear to be repeated! Please check your input data!')
         verified = False
         return verified
 
     # make sure that there are some year columns
     year_cols = [y for y in df[df.columns] if (re.match(r"[0-9]{4,7}$", str(y)) is not None)]
     if len(year_cols) == 0:
-        print("WARNING: there don't appear to be any year columns! Please check your input data!")
+        logging.warning("WARNING: there don't appear to be any year columns! Please check your input data!")
         verified = False
         return verified
 
@@ -490,13 +494,13 @@ def normalise(proc_data, normalising_dset, per_capita_or_per_usd):
     elif per_capita_or_per_usd == 'per USD':
         var2['unit'] = ['usd']*len(var2)
     else:
-        print('Error: Please select either "per capita" or "per USD" for normalisation')
+        raise ValueError('Error: Please select either "per capita" or "per USD" for normalisation')
     
     check1 = verify_data_format(var1)
     check2 = verify_data_format(var2)
 
     if not check1 or not check2:
-        print('One of the dataframes is not correct! Please check and try again!')
+        raise ValueError('One of the dataframes is not correct! Please check and try again!')
     else:
         # LOU Get metadata for later use and checking
         var1_name = var1['variable'].unique()[0]
@@ -536,10 +540,10 @@ def convert_from_Gg_to_Mt(proc_data):
 
     conversion_factor = 1/1000
 
-    print('*******************')
-    print('Converting unit from "' + org_unit + '" to "' + desired_unit + 
+    logging.debug('*******************')
+    logging.debug('Converting unit from "' + org_unit + '" to "' + desired_unit + 
           '" using a conversion factor of ' + str(conversion_factor))
-    print('*******************')
+    logging.debug('*******************')
 
     conv_df['unit'] = desired_unit
     
@@ -555,7 +559,7 @@ def convert_norm(normalised_dset, data, per_capita_or_per_usd):
     org_unit = normalised_dset['unit'].unique()[0]
 
     if data != 'emissions' and data != 'energy':
-        print('Error. Please provide a valid data type (either "emissions" or "energy".')
+        raise ValueError('Error. Please provide a valid data type (either "emissions" or "energy".')
     else:
         if data == 'emissions':
             gas_unit = re.search('Mt(\w+)', org_unit).group(1)
@@ -567,10 +571,10 @@ def convert_norm(normalised_dset, data, per_capita_or_per_usd):
             desired_unit = 'J' + ' ' + per_capita_or_per_usd
             conversion_factor = 10**9
 
-        print('*******************')
-        print('Converting unit from "' + org_unit + '" to "' + desired_unit + 
+        logging.debug('*******************')
+        logging.debug('Converting unit from "' + org_unit + '" to "' + desired_unit + 
             '" using a conversion factor of ' + str(conversion_factor))
-        print('*******************')
+        logging.debug('*******************')
 
         conv_df['unit'] = desired_unit
         
@@ -583,7 +587,7 @@ def convert_norm(normalised_dset, data, per_capita_or_per_usd):
 
 def prepare_for_plotting(final_dset):
     if not verify_data_format(final_dset):
-        print('WARNING: The data is not correctly formatted! Please check before continuing!')
+        raise ValueError('WARNING: The data is not correctly formatted! Please check before continuing!')
     # LOU Extract the key information
     else:
         variable = final_dset['variable'].unique()[0]
@@ -648,8 +652,8 @@ def eliminate_outliers(series, ktuk=3):
     # k = 1.5 -> outlier; k = 3 -> far out
     # TODO - get full and proper reference for this!!!
 
-    print('-----------')
-    print('Identifying and removing outliers')
+    logging.debug('-----------')
+    logging.debug('Identifying and removing outliers')
 
     # calculate limits
     q75, q25 = np.percentile(series, [75, 25])
@@ -657,17 +661,17 @@ def eliminate_outliers(series, ktuk=3):
     tukey_min = q25 - ktuk * iqr
     tukey_max = q75 + ktuk * iqr
     # for testing:
-    # print('tukey_min is ' + str(tukey_min))
-    # print('tukey_max is ' + str(tukey_max))
+    # logging.debug('tukey_min is ' + str(tukey_min))
+    # logging.debug('tukey_max is ' + str(tukey_max))
 
     # Tell the user what the outliers are:
     lower_outliers = series[series < tukey_min]
-    print('lower outliers are:')
-    print(lower_outliers)
+    logging.debug('lower outliers are:')
+    logging.debug(lower_outliers)
     upper_outliers = series[series > tukey_max]
-    print('upper outliers are: ')
-    print(upper_outliers)
-    print('---')
+    logging.debug('upper outliers are: ')
+    logging.debug(upper_outliers)
+    logging.debug('---')
 
     noutliers = len(lower_outliers) + len(upper_outliers)
 
@@ -712,7 +716,7 @@ def get_plot_stats(series):
 
         # determine bin edges
         bins_calc = range(int((0 - (1 + nbins / 2) * bin_width)), int((0 + (1 + nbins / 2) * bin_width)), bin_width)
-        print('bins set to ' + str(bins_calc))
+        logging.debug('bins set to ' + str(bins_calc))
 
     else:
         if maximum < 25:
@@ -727,7 +731,7 @@ def get_plot_stats(series):
 
             # determine bin edges
             bins_calc = range(0, int(1 + nbins), bin_width)
-            print('bins set to ' + str(bins_calc))
+            logging.debug('bins set to ' + str(bins_calc))
 
         else:
             # use inbuilt Freedman-Diaconis
@@ -849,18 +853,15 @@ def make_histogram(df, year, unit, xlabel='', variable_title='',
     """
 
     # announce the plot..
-    print('---------')
-    print('Making plot for: ' + str(plot_name))
-    print('---------')
+    logging.debug('---------')
+    logging.debug('Making plot for: ' + str(plot_name))
+    logging.debug('---------')
 
     series = df[str(year)]
 
     # Check the data - needs to not be, for example, all zeros
     if len(series.unique()) == 1:
-        print('---------')
-        print('All values in the series are the same! Exiting plotting routine for ' + str(plot_name))
-        print('---------')
-        return
+        raise ValueError('All values in the series are the same! Exiting plotting routine for ' + str(plot_name))                
 
     # get the value here in case it's excluded as an outlier
     if selected_country:

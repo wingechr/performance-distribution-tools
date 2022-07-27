@@ -22,16 +22,16 @@ gas_names_variable = {
    'CH4':                      'CH4',
    'CO2':                      'CO2',
    'N2O':                      'N2O',
-   'HFCS (SARGWP100)':         'HFC',
-   'HFCS (AR4GWP100)':         'HFC',
-   'PFCS (SARGWP100)':         'PFC',
-   'PFCS (AR4GWP100)':         'PFC',
+   'HFCS (SARGWP100)':         'HFC_SAR',
+   'HFCS (AR4GWP100)':         'HFC_AR4',
+   'PFCS (SARGWP100)':         'PFC_SAR',
+   'PFCS (AR4GWP100)':         'PFC_AR4',
    'SF6':                      'SF6',
    'NF3':                      'NF3',
-   'FGASES (SARGWP100)':       'F-gas',
-   'FGASES (AR4GWP100)':       'F-gas',
-   'KYOTOGHG (SARGWP100)':     'GHG',
-   'KYOTOGHG (AR4GWP100)':     'GHG'
+   'FGASES (SARGWP100)':       'F-gas_SAR',
+   'FGASES (AR4GWP100)':       'F-gas_AR4',
+   'KYOTOGHG (SARGWP100)':     'GHG_SAR',
+   'KYOTOGHG (AR4GWP100)':     'GHG_AR4'
    }
 
 sector_names_fname = {
