@@ -1,4 +1,4 @@
-import re
+import re 
 import os
 import logging
 
@@ -10,7 +10,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from general_data_manipulation import *
+import data_manipulation_general as dmge
 
 # ======================
 # Functions for Primap data manipulation and calculation
@@ -34,7 +34,7 @@ def convert_from_Gg_to_Mt(proc_data):
     conv_df['unit'] = desired_unit
     
     # Convert the data
-    conv_df, other_cols = set_non_year_cols_as_index(conv_df)
+    conv_df, other_cols = dmge.set_non_year_cols_as_index(conv_df)
     conv_df = conv_df * conversion_factor
     conv_df = conv_df.reset_index()
 
@@ -94,11 +94,11 @@ def filter_primap(renamed_data, gas, sector, scenario, countries, start_year, di
                 logging.info('---------')
 
             # Reduce to only the required years
-            proc_primap = change_first_year(proc_primap, start_year)
+            proc_primap = dmge.change_first_year(proc_primap, start_year)
 
             proc_primap['variable'] = define_primap_variable_name(sector, gas, dict_gas, primap_sectors=primap_sectors)
 
-            proc_primap = check_column_order(proc_primap)
+            proc_primap = dmge.check_column_order(proc_primap)
 
             # Check
             logging.debug('These are the first ten rows of the processed data:')

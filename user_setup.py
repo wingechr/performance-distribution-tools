@@ -9,22 +9,24 @@ from countrygroups import UNFCCC, EUROPEAN_UNION, ANNEX_ONE, NON_ANNEX_ONE
 # For example:
     # countries = UNFCCC (includes all countries in the UNFCCC)
     # countries = ['EGY', 'GRC', 'EUU', 'COL'] (includes Egypt, Greece, European Union, and Colombia)
-
-countries = UNFCCC
+    # International shipping is 'SEA'
+countries = ['SEA']#UNFCCC
 
 # Select the year that you want to plot:
 
-year_of_interest = '2016'
+year_of_interest = '2019'
 
 # In case of plotting difference from a baseline year, specify the baseline year here:
 
 baseline_year = '1990'
 
 # Select the data that you want to plot.
-#   Options are:    'emissions' (uses Primap-hist data)
-#                   'energy' (uses bp data)
+#   Options are:    1:  'Emissions (Primap-histcr)' (Primap-hist country-reported data)
+#                   2:  'Emissions (Primap-histtp)' (Primap-hist third-party data)
+#                   3:  'Energy (bp)' (uses bp data)
+#                   4:  'Emissions (IPCC AR6)' (uses emissions data from AR6)
 
-data = 'emissions'
+dataset = 4
 
 # If plotting Primap emissions data, please select the type of gas that you want to plot.
 # These are the options:
@@ -69,34 +71,59 @@ primap_gas = 'KYOTOGHG (AR4GWP100)'
 # '4'           (Waste)
 # '5'           (Other)
    
-primap_sector = 'M.0.EL'
+primap_sector = '2'
 
-# %%
-# If plotting Primap emissions data, plese select the data scenario that you want to plot.
-# These are the options:
-# 'HISTCR' (country-reported data)
-# 'HISTTP' (third-party data)
-
-primap_scenario = 'HISTCR'
-
-# %%
 # If plotting energy data, please select the variable that you want to plot
 # Options are:      1: Share of renewables in electricity
 #                   2: Share of fossil fuels in primary energy consumed
 #                   3: Energy use
 energy_variable = 3
 
-# %%
+# If plotting emissions data from IPCC, please select the gas.
+# Options are:      'CO2'
+#                   'CH4'
+#                   'N2O'
+#                   'Fgas'
+#                   'GHG'
+ipcc_gas = 'GHG'
+
+# If plotting emissions data from the IPCC, please select the sector.
+# Options are:      'Residential'
+#                   'Electricity & heat'
+#                   'Oil and gas fugitive emissions'
+#                   'Other (energy systems)'
+#                   'Chemicals'
+#                   'Other (industry)'
+#                   'Waste'
+#                   'Domestic Aviation'
+#                   'Other (transport)'
+#                   'Road'
+#                   'Inland Shipping'
+#                   'Enteric Fermentation (CH4)'
+#                   'Managed soils and pasture (CO2, N2O)'
+#                   'Manure management (N2O, CH4)'
+#                   'Non-residential'
+#                   'Biomass burning (CH4, N2O)'
+#                   'Rice cultivation (CH4)'
+#                   'Synthetic fertilizer application (N2O)'
+#                   'Non-CO2 (all buildings)'
+#                   'Coal mining fugitive emissions'
+#                   'Cement'
+#                   'Metals'
+#                   'Petroleum refining'
+#                   'International Aviation'
+#                   'Rail'
+#                   'International Shipping'
+ipcc_subsector = 'International Shipping'
+
 # Select the data type that you want to plot:
 # Options are:      'absolute'
 #                   'per capita'
 #                   'per USD'
 # WARNING:  Per capita and per USD measures do not apply to the following variables: share of renewables in electricity and share of fossil
-#           fuels in TPES.
-data_type = 'absolute'
+#           fuels in primary energy consumed.
+data_type = 'per capita'
 
-# %%
-# IN PROGRESS
 # Select the type of plot that you want to create:
 # Options are:      1: Distribution of variable in specified year.
 #                   2: Change of variable since specified year.
@@ -104,5 +131,3 @@ data_type = 'absolute'
 #                   4: Year of peaking
 
 plot_type = 4
-
-

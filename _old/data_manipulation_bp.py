@@ -1,4 +1,4 @@
-import re
+import re 
 import os
 import logging
 
@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 from shortcountrynames import to_name
-from general_data_manipulation import *
+import data_manipulation_general as dmge
 
 # ======================
 # Functions for bp data calculation and manipulation
@@ -97,8 +97,8 @@ def filter_bp(renamed_bp, energy_variable, countries, start_year):
                 logging.info('---------')
 
             # Reduce to only required years
-            filtered = change_first_year(filtered, start_year)
-            filtered = check_column_order(filtered)
+            filtered = dmge.change_first_year(filtered, start_year)
+            filtered = dmge.check_column_order(filtered)
 
             # Check
             logging.debug('These are the 10 first rows of the processed data:')
