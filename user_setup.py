@@ -10,11 +10,11 @@ from countrygroups import UNFCCC, EUROPEAN_UNION, ANNEX_ONE, NON_ANNEX_ONE
     # countries = UNFCCC (includes all countries in the UNFCCC)
     # countries = ['EGY', 'GRC', 'EUU', 'COL'] (includes Egypt, Greece, European Union, and Colombia)
     # International shipping is 'SEA'
-countries = ['SEA']#UNFCCC
+countries = UNFCCC
 
 # Select the year that you want to plot:
 
-year_of_interest = '2019'
+year_of_interest = '2015'
 
 # In case of plotting difference from a baseline year, specify the baseline year here:
 
@@ -59,7 +59,7 @@ primap_gas = 'KYOTOGHG (AR4GWP100)'
 # '2'           (IPPU)
 # '2.A'         (Mineral industry)
 # '2.B'         (Chemical industry)
-# '2.C'         (Metal industry)
+# '2.C'         (Metals industry)
 # '2.D'         (Non-energy products from fuels and solvents)
 # '2.E'         (Electronics industry)
 # '2.F'         (NO DATA - Emissions from the use of substitutes of ozone-depleting substances)
@@ -77,7 +77,7 @@ primap_sector = '2'
 # Options are:      1: Share of renewables in electricity
 #                   2: Share of fossil fuels in primary energy consumed
 #                   3: Energy use
-energy_variable = 3
+energy_variable = 1
 
 # If plotting emissions data from IPCC, please select the gas.
 # Options are:      'CO2'
@@ -114,7 +114,7 @@ ipcc_gas = 'GHG'
 #                   'International Aviation'
 #                   'Rail'
 #                   'International Shipping'
-ipcc_subsector = 'International Shipping'
+ipcc_subsector = 'Rail'
 
 # Select the data type that you want to plot:
 # Options are:      'absolute'
@@ -127,7 +127,7 @@ data_type = 'per capita'
 # Select the type of plot that you want to create:
 # Options are:      1: Distribution of variable in specified year.
 #                   2: Change of variable since specified year.
-#                   3: Rolling average trend
+#                   3: 5-year average trend in the specified year.
 #                   4: Year of peaking
 
-plot_type = 4
+plot_type = 2

@@ -147,7 +147,7 @@ def get_plot_stats(series):
     mean = np.mean(series)
     median = np.median(series)
     npts = len(series)
-    full_range = np.ceil(maximum - minimum)
+    full_range = maximum-minimum#np.ceil(maximum - minimum)
 
     # Use data metrics to determine which approach to use for bins.
     if (minimum < 0) & (maximum > 0):
@@ -190,16 +190,21 @@ def get_plot_stats(series):
         bin_width = full_range / np.ceil(npts**(0.5))
 
             # for nbins, need to take into account asymmetric distribution around 0
-        nbins = np.ceil(abs(maximum))
+        nbins = maximum #np.ceil(maximum)#np.ceil(abs(maximum))
         print('nbins is: ' + str(nbins))
         print('bin_width is: ')
         print(bin_width)
         print('Maximum is:')
         print(maximum)
             # determine bin edges
-        bins_calc = np.arange(0, np.ceil(nbins), bin_width)
+        if minimum < 0 and maximum <= 0:        
+            bins_calc = np.arange(minimum, 0, bin_width)#np.ceil(nbins), bin_width)
+        else:
+            bins_calc = np.arange(0, nbins, bin_width)
             #bins_calc = np.arange(0, int(1 + nbins), bin_width)
         logging.debug('bins set to ' + str(bins_calc))
+        print('bins_calc:')
+        print(bins_calc)
 
         #else:
             # use inbuilt Freedman-Diaconis
@@ -249,10 +254,10 @@ def make_histogram(df, year, unit, plot_type=0, xlabel='', variable_title='',
     logging.debug('Making plot for: ' + str(plot_name))
     logging.debug('---------')
     
-    if plot_type == 1 or plot_type == 2:
-        series = df[str(year)]
-    else:
-        series = df.iloc[:,-1]
+    #if plot_type == 1 or plot_type == 2:
+    series = df[str(year)]
+    #else:
+    #    series = df.iloc[:,-1]
 
     # Check the data - needs to not be, for example, all zeros
     if len(series.unique()) == 1:

@@ -270,7 +270,7 @@ def define_ipcc_variable_name(subsector, gas, ipcc_subsectors='gst_tools/ipcc_se
         raise ValueError('The subsector selected does not exist in the database. Please check if it was entered correctly.')
     else:
         if subsector in ['Oil and gas fugitive emissions', 'Other (energy systems)', 'Other (industry)',
-                    'Waste', 'Other (transport)', 'Coal mining fugitive emissions']:
+                    'Waste', 'Other (transport)', 'Coal mining fugitive emissions', 'Non-CO2 (all buildings)']:
             
             variable_name = subsectors.loc[subsector]['1'] + ' ' + gas_name + ' ' +  subsectors.loc[subsector]['3'] + ' ' +  subsectors.loc[subsector]['4'] + ' ' +  subsectors.loc[subsector]['5']
         
@@ -391,6 +391,11 @@ def filter_bp(renamed_bp, energy_variable, countries, start_year):
             # Tell the user if any of the needed countries are missing and, if yes, which ones:
             missing_countries = list(set(countries) - set(filtered['country'].unique()))
             if missing_countries:
+                print('Not all countries requested were available in the raw data. You are missing the following:')
+                for country in missing_countries:
+                    print('   ' + to_name(country))
+                print('---------')
+
                 logging.info('Not all countries requested were available in the raw data. You are missing the following:')
                 for country in missing_countries:
                     logging.info('   ' + to_name(country))
@@ -421,6 +426,12 @@ def filter_ipcc(renamed_ipcc, gas, subsector, countries, start_year):
         else:
             missing_countries = list(set(countries) - set(filtered['country'].unique()))
             if missing_countries:
+                print('Not all countries requested were available in the raw data. You are missing the following:')
+                for country in missing_countries:
+                    print('   ' + to_name(country))
+                print('---------')                
+                              
+                
                 logging.info('Not all countries requested were available in the raw data. You are missing the following:')
                 for country in missing_countries:
                     logging.info('   ' + to_name(country))
@@ -559,8 +570,11 @@ def prepare_for_plotting(final_dset, plot_type):
 
         # Tidy up for next steps
         data_years = set_countries_as_index(final_dset)
+        data_years.to_csv('proc-data/countries_as_index.csv', index=False)
         data_years = data_years.dropna(axis=1, how='all')
-        data_years = data_years.dropna(axis=0, how='any')
+        data_years.to_csv('proc-data/dropped_columns.csv', index=False)
+        #data_years = data_years.dropna(axis=0, how='any')
+        #data_years.to_csv('proc-data/dropped_rows.csv', index=False)
 
         if plot_type == 4:
             year_max = data_years.idxmax(axis=1)
