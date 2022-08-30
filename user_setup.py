@@ -14,7 +14,7 @@ countries = UNFCCC
 
 # Select the year that you want to plot:
 
-year_of_interest = '2015'
+year_of_interest = '2019'
 
 # In case of plotting difference from a baseline year, specify the baseline year here:
 
@@ -26,7 +26,7 @@ baseline_year = '1990'
 #                   3:  'Energy (bp)' (uses bp data)
 #                   4:  'Emissions (IPCC AR6)' (uses emissions data from AR6)
 
-dataset = 4
+dataset = 3
 
 # If plotting Primap emissions data, please select the type of gas that you want to plot.
 # These are the options:
@@ -122,7 +122,7 @@ ipcc_subsector = 'Rail'
 #                   'per USD'
 # WARNING:  Per capita and per USD measures do not apply to the following variables: share of renewables in electricity and share of fossil
 #           fuels in primary energy consumed.
-data_type = 'per capita'
+data_type = 'absolute'
 
 # Select the type of plot that you want to create:
 # Options are:      1: Distribution of variable in specified year.
@@ -130,4 +130,4 @@ data_type = 'per capita'
 #                   3: 5-year average trend in the specified year.
 #                   4: Year of peaking
 
-plot_type = 2
+plot_type = 1

@@ -59,16 +59,25 @@ def calculate_ff_share(renamed_bp):
 
 def calculate_ren_elec_share(renamed_bp):
     # Share of renewable energy in electricy
-    renewables = renamed_bp['electbyfuel_ren_power'] + renamed_bp['electbyfuel_hydro']
+    #renewables = renamed_bp['electbyfuel_ren_power'] + renamed_bp['electbyfuel_hydro']
 
-    total = renamed_bp['electbyfuel_total']
+    #renewables = renamed_bp['ren_power_twh'] + renamed_bp['hydro_twh']
     
-    share = (renewables/total)*100
+
+
+    #total = renamed_bp['electbyfuel_total']
+    
+    #total = renamed_bp['elect_twh']
+
+    #share = (renewables/total)*100
+
+    #share = (renamed_bp['ren_power_twh'] + renamed_bp['hydro_twh']) / renamed_bp['elect_twh'] *100
 
     new_df = renamed_bp.copy()
-    new_df['ren_elec_share_%'] = share
+    new_df['ren_elec_share_%'] = (renamed_bp['ren_power_twh'] + renamed_bp['hydro_twh']) / renamed_bp['elect_twh'] *100
 
     logging.debug('Added share of renewables in electricity generated. Unit: %')
+    new_df.to_csv('proc-data/division_test.csv', index=False)
     return new_df
 
 def change_first_year(df, new_start_year):
@@ -570,11 +579,17 @@ def prepare_for_plotting(final_dset, plot_type):
 
         # Tidy up for next steps
         data_years = set_countries_as_index(final_dset)
+        # Delete the following:
+        print('Set countries as index, #countries is: ' + str(len(data_years)))
         data_years.to_csv('proc-data/countries_as_index.csv', index=False)
         data_years = data_years.dropna(axis=1, how='all')
+        print('Dropped the columns that that had all NAs, #countries is:' + str(len(data_years)))
         data_years.to_csv('proc-data/dropped_columns.csv', index=False)
-        #data_years = data_years.dropna(axis=0, how='any')
-        #data_years.to_csv('proc-data/dropped_rows.csv', index=False)
+        data_years = data_years.dropna(axis=0, how='all')
+        print('Dropped rows that had all NAs. Number of countries is: ' + str(len(data_years)))
+        data_years.to_csv('proc-data/dropped_rows.csv', index=False)
+        
+        # Stop deleting
 
         if plot_type == 4:
             year_max = data_years.idxmax(axis=1)
