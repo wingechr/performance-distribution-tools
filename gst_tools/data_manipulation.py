@@ -74,10 +74,10 @@ def calculate_ren_elec_share(renamed_bp):
     #share = (renamed_bp['ren_power_twh'] + renamed_bp['hydro_twh']) / renamed_bp['elect_twh'] *100
 
     new_df = renamed_bp.copy()
-    new_df['ren_elec_share_%'] = (renamed_bp['ren_power_twh'] + renamed_bp['hydro_twh']) / renamed_bp['elect_twh'] *100
+    new_df['ren_elec_share'] = (new_df['ren_power_twh'] + new_df['hydro_twh']) / new_df['elect_twh'] *100
 
     logging.debug('Added share of renewables in electricity generated. Unit: %')
-    new_df.to_csv('proc-data/division_test.csv', index=False)
+    #new_df.to_csv('proc-data/division_test.csv', index=False)
     return new_df
 
 def change_first_year(df, new_start_year):
@@ -374,8 +374,8 @@ def filter_bp(renamed_bp, energy_variable, countries, start_year):
         # Calculate the variables, add them to the dataframe, and pivot the dataframe to only include this variable along with the unit column.
         if energy_variable == 1:
             filtered = calculate_ren_elec_share(renamed_bp)
-            filtered = filtered[['country','ren_elec_share_%', 'year']]
-            filtered = filtered.pivot(index='country', columns='year', values='ren_elec_share_%').reset_index().rename_axis(None, axis=1)
+            filtered = filtered[['country','ren_elec_share', 'year']]
+            filtered = filtered.pivot(index='country', columns='year', values='ren_elec_share').reset_index().rename_axis(None, axis=1)
             filtered['variable'] = ['Share of renewable power']*len(filtered)
             filtered['unit'] = ['%']*len(filtered)
         elif energy_variable == 2:
@@ -579,17 +579,17 @@ def prepare_for_plotting(final_dset, plot_type):
 
         # Tidy up for next steps
         data_years = set_countries_as_index(final_dset)
-        # Delete the following:
-        print('Set countries as index, #countries is: ' + str(len(data_years)))
-        data_years.to_csv('proc-data/countries_as_index.csv', index=False)
+        # Delete the following prints and to_csvs:
+        #print('Set countries as index, #countries is: ' + str(len(data_years)))
+        #data_years.to_csv('proc-data/countries_as_index.csv', index=False)
         data_years = data_years.dropna(axis=1, how='all')
-        print('Dropped the columns that that had all NAs, #countries is:' + str(len(data_years)))
-        data_years.to_csv('proc-data/dropped_columns.csv', index=False)
+        #print('Dropped the columns that that had all NAs, #countries is:' + str(len(data_years)))
+        #data_years.to_csv('proc-data/dropped_columns.csv', index=False)
         data_years = data_years.dropna(axis=0, how='all')
-        print('Dropped rows that had all NAs. Number of countries is: ' + str(len(data_years)))
-        data_years.to_csv('proc-data/dropped_rows.csv', index=False)
+        #print('Dropped rows that had all NAs. Number of countries is: ' + str(len(data_years)))
+        #data_years.to_csv('proc-data/dropped_rows.csv', index=False)
         
-        # Stop deleting
+        # End of section to be deleted
 
         if plot_type == 4:
             year_max = data_years.idxmax(axis=1)
