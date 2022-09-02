@@ -400,11 +400,6 @@ def filter_bp(renamed_bp, energy_variable, countries, start_year):
             # Tell the user if any of the needed countries are missing and, if yes, which ones:
             missing_countries = list(set(countries) - set(filtered['country'].unique()))
             if missing_countries:
-                print('Not all countries requested were available in the raw data. You are missing the following:')
-                for country in missing_countries:
-                    print('   ' + to_name(country))
-                print('---------')
-
                 logging.info('Not all countries requested were available in the raw data. You are missing the following:')
                 for country in missing_countries:
                     logging.info('   ' + to_name(country))
@@ -434,13 +429,7 @@ def filter_ipcc(renamed_ipcc, gas, subsector, countries, start_year):
         
         else:
             missing_countries = list(set(countries) - set(filtered['country'].unique()))
-            if missing_countries:
-                print('Not all countries requested were available in the raw data. You are missing the following:')
-                for country in missing_countries:
-                    print('   ' + to_name(country))
-                print('---------')                
-                              
-                
+            if missing_countries:                
                 logging.info('Not all countries requested were available in the raw data. You are missing the following:')
                 for country in missing_countries:
                     logging.info('   ' + to_name(country))

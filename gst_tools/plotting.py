@@ -191,11 +191,11 @@ def get_plot_stats(series):
 
             # for nbins, need to take into account asymmetric distribution around 0
         nbins = maximum #np.ceil(maximum)#np.ceil(abs(maximum))
-        print('nbins is: ' + str(nbins))
-        print('bin_width is: ')
-        print(bin_width)
-        print('Maximum is:')
-        print(maximum)
+        logging.debug('nbins is: ' + str(nbins))
+        logging.debug('bin_width is: ')
+        logging.debug(bin_width)
+        logging.debug('Maximum is:')
+        logging.debug(maximum)
             # determine bin edges
         if minimum < 0 and maximum <= 0:        
             bins_calc = np.arange(minimum, 0, bin_width)#np.ceil(nbins), bin_width)
@@ -203,8 +203,8 @@ def get_plot_stats(series):
             bins_calc = np.arange(0, nbins, bin_width)
             #bins_calc = np.arange(0, int(1 + nbins), bin_width)
         logging.debug('bins set to ' + str(bins_calc))
-        print('bins_calc:')
-        print(bins_calc)
+        logging.debug('bins_calc:')
+        logging.debug(bins_calc)
 
         #else:
             # use inbuilt Freedman-Diaconis
