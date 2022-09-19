@@ -1,14 +1,14 @@
 .DS_Store
 
 # Project specific
-output/*
-!output/example/
+#output/*
+#!output/example/
 
 # Data files
-input-data/*
-!input-data/availability/
-proc-data/*
-!proc-data/example-data/
+#input-data/*
+#!input-data/availability/
+#proc-data/*
+#!proc-data/example-data/
 
 
 # Byte-compiled / optimized / DLL files
