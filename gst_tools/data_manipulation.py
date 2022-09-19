@@ -415,7 +415,7 @@ def filter_bp(renamed_bp, energy_variable, countries, start_year):
 
             return filtered
 
-def filter_ipcc(renamed_ipcc, gas, subsector, countries, start_year):
+def filter_ipcc(renamed_ipcc, gas, subsector, countries, start_year, ipcc_subsectors='gst_tools/ipcc_sectors.csv'):
     filtered = renamed_ipcc[['country', 'year', 'category', gas]]
     filtered = filtered.loc[(filtered['category'] == subsector)]
 
@@ -439,7 +439,7 @@ def filter_ipcc(renamed_ipcc, gas, subsector, countries, start_year):
             filtered = filtered[['country', 'year', gas]]
             filtered = filtered.pivot(index='country', columns='year', values=gas).reset_index().rename_axis(None, axis=1)
                 
-            filtered['variable'] = [define_ipcc_variable_name(subsector, gas)]*len(filtered)
+            filtered['variable'] = [define_ipcc_variable_name(subsector, gas, ipcc_subsectors=ipcc_subsectors)]*len(filtered)
             filtered['unit'] = ['tCO2eq']*len(filtered)
 
             # Reduce to only the required years
