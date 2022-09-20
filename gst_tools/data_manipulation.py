@@ -400,11 +400,6 @@ def filter_bp(renamed_bp, energy_variable, countries, start_year):
             # Tell the user if any of the needed countries are missing and, if yes, which ones:
             missing_countries = list(set(countries) - set(filtered['country'].unique()))
             if missing_countries:
-                print('Not all countries requested were available in the raw data. You are missing the following:')
-                for country in missing_countries:
-                    print('   ' + to_name(country))
-                print('---------')
-
                 logging.info('Not all countries requested were available in the raw data. You are missing the following:')
                 for country in missing_countries:
                     logging.info('   ' + to_name(country))
@@ -420,7 +415,7 @@ def filter_bp(renamed_bp, energy_variable, countries, start_year):
 
             return filtered
 
-def filter_ipcc(renamed_ipcc, gas, subsector, countries, start_year):
+def filter_ipcc(renamed_ipcc, gas, subsector, countries, start_year, ipcc_subsectors='gst_tools/ipcc_sectors.csv'):
     filtered = renamed_ipcc[['country', 'year', 'category', gas]]
     filtered = filtered.loc[(filtered['category'] == subsector)]
 
@@ -434,13 +429,7 @@ def filter_ipcc(renamed_ipcc, gas, subsector, countries, start_year):
         
         else:
             missing_countries = list(set(countries) - set(filtered['country'].unique()))
-            if missing_countries:
-                print('Not all countries requested were available in the raw data. You are missing the following:')
-                for country in missing_countries:
-                    print('   ' + to_name(country))
-                print('---------')                
-                              
-                
+            if missing_countries:                
                 logging.info('Not all countries requested were available in the raw data. You are missing the following:')
                 for country in missing_countries:
                     logging.info('   ' + to_name(country))
@@ -450,7 +439,7 @@ def filter_ipcc(renamed_ipcc, gas, subsector, countries, start_year):
             filtered = filtered[['country', 'year', gas]]
             filtered = filtered.pivot(index='country', columns='year', values=gas).reset_index().rename_axis(None, axis=1)
                 
-            filtered['variable'] = [define_ipcc_variable_name(subsector, gas)]*len(filtered)
+            filtered['variable'] = [define_ipcc_variable_name(subsector, gas, ipcc_subsectors=ipcc_subsectors)]*len(filtered)
             filtered['unit'] = ['tCO2eq']*len(filtered)
 
             # Reduce to only the required years
