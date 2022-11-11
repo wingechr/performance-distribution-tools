@@ -261,30 +261,37 @@ def define_bp_proc_fname(proc_data):
 
     return proc_fname
 
-def define_ipcc_proc_fname(proc_data):
+def define_ipcc_proc_fname(proc_data, indirect=False):
     source = 'ipcc_ar6_wg3'    
     variable = proc_data['variable'][0]
 
+    if indirect:
+        source = source + '_with_indirect'
+        
     proc_fname = source + '_' + variable.replace(' ', '_').lower() + '.csv'
 
     return proc_fname
 
-def define_ipcc_variable_name(subsector, gas, ipcc_subsectors='gst_tools/ipcc_sectors.csv'):
+def define_ipcc_variable_name(sector_or_subsector, gas, ipcc_subsectors='gst_tools/ipcc_subsectors.csv'):
     subsectors = pd.read_csv(ipcc_subsectors)
     subsectors.set_index('subsector', inplace=True)
 
     gas_name = gas
 
-    if subsector not in list(subsectors.index):
-        raise ValueError('The subsector selected does not exist in the database. Please check if it was entered correctly.')
+    if sector_or_subsector not in list(subsectors.index):
+        raise ValueError('The sector or subsector selected does not exist in the database. Please check if it was entered correctly.')
     else:
-        if subsector in ['Oil and gas fugitive emissions', 'Other (energy systems)', 'Other (industry)',
+        if sector_or_subsector in ['Oil and gas fugitive emissions', 'Other (energy systems)', 'Other (industry)',
                     'Waste', 'Other (transport)', 'Coal mining fugitive emissions', 'Non-CO2 (all buildings)']:
             
-            variable_name = subsectors.loc[subsector]['1'] + ' ' + gas_name + ' ' +  subsectors.loc[subsector]['3'] + ' ' +  subsectors.loc[subsector]['4'] + ' ' +  subsectors.loc[subsector]['5']
+            variable_name = subsectors.loc[sector_or_subsector]['1'] + ' ' + gas_name + ' ' +  subsectors.loc[sector_or_subsector]['3'] + ' ' +  subsectors.loc[sector_or_subsector]['4'] + ' ' +  subsectors.loc[subsector]['5']
         
+        elif sector_or_subsector in ['AFOLU', 'Buildings', 'Energy systems', 'Industry', 'Transport']:
+            variable_name = gas_name + ' ' + subsectors.loc[sector_or_subsector]['3'] + ' ' +  subsectors.loc[sector_or_subsector]['4'] + ' ' +  subsectors.loc[sector_or_subsector]['5']
+        elif sector_or_subsector == "Total (excl. LULUCF)":
+            variable_name = subsectors.loc[sector_or_subsector]['1'] + ' ' + gas_name + ' ' + subsectors.loc[sector_or_subsector]['3'] + ' ' +  subsectors.loc[sector_or_subsector]['5']
         else:
-            variable_name = gas_name + ' ' +  subsectors.loc[subsector]['3'] + ' ' +  subsectors.loc[subsector]['4'] + ' ' +  subsectors.loc[subsector]['5']
+            variable_name = gas_name + ' ' +  subsectors.loc[sector_or_subsector]['3'] + ' ' +  subsectors.loc[sector_or_subsector]['4'] + ' ' +  subsectors.loc[sector_or_subsector]['5']
         
         return variable_name
 
@@ -415,12 +422,27 @@ def filter_bp(renamed_bp, energy_variable, countries, start_year):
 
             return filtered
 
-def filter_ipcc(renamed_ipcc, gas, subsector, countries, start_year, ipcc_subsectors='gst_tools/ipcc_sectors.csv'):
-    filtered = renamed_ipcc[['country', 'year', 'category', gas]]
-    filtered = filtered.loc[(filtered['category'] == subsector)]
+def filter_ipcc(renamed_ipcc, gas, sector_or_subsector, countries, start_year, ipcc_subsectors='gst_tools/ipcc_subsectors.csv'):
+    
+    filtered = renamed_ipcc[['country', 'year', 'sector', 'subsector', gas]]
+    
+    # Calculating sector aggregation, including total excl. LULUCF
+    sector_aggr = filtered.drop(columns=['subsector']).groupby(by=['country', 'year', 'sector']).sum().reset_index()
+
+    total = sector_aggr.groupby(by=['country', 'year']).sum().reset_index()
+    
+    total['sector'] = ['Total (excl. LULUCF)']*len(total)
+    sector_aggr_tot = pd.concat([sector_aggr, total]).reset_index(drop=True)
+
+    sector_aggr_tot.rename(columns={'sector': 'category'}, inplace=True)
+    filtered = filtered.drop(columns=['sector']).rename(columns={'subsector': 'category'})
+    filtered = pd.concat([filtered, sector_aggr_tot]).reset_index(drop=True)
+    
+    # Filtering
+    filtered = filtered.loc[(filtered['category'] == sector_or_subsector)]
 
     if len(filtered.index) == 0:
-        raise ValueError('There is no data for the subsector selected. Check the subsector and try again.')
+        raise ValueError('There is no data for the sector or subsector selected. Try again.')
     else:
         filtered = filtered.loc[filtered['country'].isin(countries)]
 
@@ -439,7 +461,70 @@ def filter_ipcc(renamed_ipcc, gas, subsector, countries, start_year, ipcc_subsec
             filtered = filtered[['country', 'year', gas]]
             filtered = filtered.pivot(index='country', columns='year', values=gas).reset_index().rename_axis(None, axis=1)
                 
-            filtered['variable'] = [define_ipcc_variable_name(subsector, gas, ipcc_subsectors=ipcc_subsectors)]*len(filtered)
+            filtered['variable'] = [define_ipcc_variable_name(sector_or_subsector, gas, ipcc_subsectors=ipcc_subsectors)]*len(filtered)
+            
+            filtered['unit'] = ['tCO2eq']*len(filtered)
+
+            # Reduce to only the required years
+            filtered = change_first_year(filtered, start_year)
+
+            filtered = check_column_order(filtered)
+
+            # Check
+            logging.debug('These are the first ten rows of the processed data:')
+            logging.debug(filtered.head(10))
+
+            return filtered
+
+def filter_ipcc_indirect(renamed_ipcc_indirect, gas, sector_or_subsector, countries, start_year, ipcc_subsectors='gst_tools/ipcc_subsectors.csv'):
+    if gas != 'GHG':
+        raise ValueError('The emissions dataset does not include data for the gas selected. For this dataset, you can choose GHG only.')
+    elif int(start_year) < 1990:
+        raise ValueError('The emissions dataset does not include data for years prior to 1990.')
+    else:
+        filtered = renamed_ipcc_indirect
+        
+        # Calculating sector aggregation, including total excl. LULUCF
+        sector_aggr = filtered.drop(columns=['subsector', 'source']).groupby(by=['country', 'sector']).sum().reset_index()
+
+        total = sector_aggr.groupby(by=['country']).sum().reset_index()
+        sector_column = ['Total (excl. LULUCF)']*len(total)
+        total.insert(1, 'sector', sector_column)
+        
+        sector_aggr_tot = pd.concat([sector_aggr, total]).reset_index(drop=True)
+        sector_aggr_tot.rename(columns={'sector': 'category'}, inplace=True)
+        
+        filtered = filtered.drop(columns=['sector', 'source']).rename(columns={'subsector': 'category'})
+
+        filtered = filtered.groupby(by=['country', 'category']).sum().reset_index()
+        
+        filtered = pd.concat([filtered, sector_aggr_tot]).reset_index(drop=True)
+
+        
+        # Filtering by category
+        
+        filtered = filtered.loc[(filtered['category'] == sector_or_subsector)]
+        
+        if len(filtered.index) == 0:
+          raise ValueError('There is no data for the sector or subsector selected. Try again.')
+
+        else:
+          # Filtering by countries
+          filtered = filtered.loc[filtered['country'].isin(countries)]
+
+          if len(filtered.index) == 0:
+            raise ValueError('There is no data for the countries selected. Please, select different countries.')
+
+          else:
+            missing_countries = list(set(countries) - set(filtered['country'].unique()))
+            
+            if missing_countries:
+              logging.info('Not all countries requested were available in the raw data. You are missing the following:')
+              for country in missing_countries:
+                logging.info('   ' + to_name(country))
+                logging.info('---------')
+
+            filtered['variable'] = [define_ipcc_variable_name(sector_or_subsector, gas, ipcc_subsectors=ipcc_subsectors)]*len(filtered)
             filtered['unit'] = ['tCO2eq']*len(filtered)
 
             # Reduce to only the required years
@@ -610,11 +695,22 @@ def rename_ipcc(raw_ipcc):
     raw_data_renamed = raw_ipcc.rename(columns={
                         'country': 'country_name',
                         'ISO': 'country',
-                        'subsector_title': 'category'}, inplace=False)
+                        'sector_title': 'sector',
+                        'subsector_title': 'subsector'}, inplace=False)
 
-    raw_data_renamed.loc[raw_data_renamed['category'] == 'Rail ', 'category'] = 'Rail'
+    raw_data_renamed.loc[raw_data_renamed['subsector'] == 'Rail ', 'subsector'] = 'Rail'
 
     raw_data_renamed = raw_data_renamed.astype({'year': str})
+    return raw_data_renamed
+
+def rename_ipcc_indirect(raw_ipcc_indirect):
+    raw_data_renamed = raw_ipcc_indirect.rename(columns={
+        'ISO': 'country',
+        'sector_title': 'sector',
+        'subsector_title': 'subsector'}, inplace=False)
+    
+    raw_data_renamed.loc[raw_data_renamed['subsector'] == 'Rail ', 'subsector'] = 'Rail'
+
     return raw_data_renamed
 
 def rename_primap(raw_primap):

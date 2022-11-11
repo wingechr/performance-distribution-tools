@@ -17,7 +17,10 @@ bp_source = 'bp Statistical Review\n of World Energy 2022'
 
 # 3. Sectoral emissions data from the IPCC's AR6
 ipcc_ar6 = 'essd_ghg_data_gwp100.csv'
-ipcc_source = 'IPCC AR6 - WG3'
+ipcc_source = 'IPCC AR6'
+
+ipcc_ar6_incl_indirect = 'proc_national_incl_indirect_ghg_data.csv'
+ipcc_indirect_source = 'IPCC AR6 (with\n indirect emissions)'
 
 # 4. Population and GDP data from the World Bank
 # Population dataset

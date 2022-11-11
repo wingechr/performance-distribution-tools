@@ -25,8 +25,9 @@ baseline_year = '1990'
 #                   2:  'Emissions (Primap-histtp)' (Primap-hist third-party data)
 #                   3:  'Energy (bp)' (uses bp data)
 #                   4:  'Emissions (IPCC AR6)' (uses emissions data from AR6)
+#                   5:  'Emissions (IPCC AR6)', including indirect emissions
 
-dataset = 3
+dataset = 5
 
 # If plotting Primap emissions data, please select the type of gas that you want to plot.
 # These are the options:
@@ -88,33 +89,39 @@ energy_variable = 1
 ipcc_gas = 'GHG'
 
 # If plotting emissions data from the IPCC, please select the sector.
-# Options are:      'Residential'
-#                   'Electricity & heat'
-#                   'Oil and gas fugitive emissions'
-#                   'Other (energy systems)'
-#                   'Chemicals'
-#                   'Other (industry)'
-#                   'Waste'
-#                   'Domestic Aviation'
-#                   'Other (transport)'
-#                   'Road'
-#                   'Inland Shipping'
-#                   'Enteric Fermentation (CH4)'
-#                   'Managed soils and pasture (CO2, N2O)'
-#                   'Manure management (N2O, CH4)'
-#                   'Non-residential'
-#                   'Biomass burning (CH4, N2O)'
-#                   'Rice cultivation (CH4)'
-#                   'Synthetic fertilizer application (N2O)'
-#                   'Non-CO2 (all buildings)'
-#                   'Coal mining fugitive emissions'
-#                   'Cement'
-#                   'Metals'
-#                   'Petroleum refining'
-#                   'International Aviation'
-#                   'Rail'
-#                   'International Shipping'
-ipcc_subsector = 'Rail'
+# Subsector options are:        'Residential'
+#                               'Electricity & heat'
+#                               'Oil and gas fugitive emissions'
+#                               'Other (energy systems)'
+#                               'Chemicals'
+#                               'Other (industry)'
+#                               'Waste'
+#                               'Domestic Aviation'
+#                               'Other (transport)'
+#                               'Road'
+#                               'Inland Shipping'
+#                               'Enteric Fermentation (CH4)'
+#                               'Managed soils and pasture (CO2, N2O)'
+#                               'Manure management (N2O, CH4)'
+#                               'Non-residential'
+#                               'Biomass burning (CH4, N2O)'
+#                               'Rice cultivation (CH4)'
+#                               'Synthetic fertilizer application (N2O)'
+#                               'Non-CO2 (all buildings)'
+#                               'Coal mining fugitive emissions'
+#                               'Cement'
+#                               'Metals'
+#                               'Petroleum refining'
+#                               'International Aviation'
+#                               'Rail'
+#                               'International Shipping'
+# Sector options are:           'AFOLU'
+#                               'Buildings'
+#                               'Energy systems'
+#                               'Industry'
+#                               'Transport'
+#                               'Total (excl. LULUCF)'
+ipcc_sector_or_subsector = 'Total (excl. LULUCF)'
 
 # Select the data type that you want to plot:
 # Options are:      'absolute'
