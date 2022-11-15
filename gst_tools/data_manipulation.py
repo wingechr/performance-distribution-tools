@@ -213,7 +213,7 @@ def convert_norm(normalised_dset, data, per_capita_or_per_usd):
     conv_df = normalised_dset.copy()
     org_unit = normalised_dset['unit'].unique()[0]
 
-    if data != 1 and data != 2 and data != 3 and data != 4:
+    if data != 1 and data != 2 and data != 3 and data != 4 and data != 5:
         raise ValueError('Error. Please provide a valid data type (either 1, 2, 3 or 4.)')
     else:
         if data == 1 or data == 2:
@@ -231,7 +231,7 @@ def convert_norm(normalised_dset, data, per_capita_or_per_usd):
             if per_capita_or_per_usd == 'per USD':
                 conversion_factor = 10**12
                 desired_unit = 'mJ' + ' ' + per_capita_or_per_usd
-        elif data == 4:
+        elif data == 4 or data == 5:
             desired_unit = 't' + 'CO2eq ' + per_capita_or_per_usd
             conversion_factor = 1000000
 
@@ -284,7 +284,7 @@ def define_ipcc_variable_name(sector_or_subsector, gas, ipcc_subsectors='gst_too
         if sector_or_subsector in ['Oil and gas fugitive emissions', 'Other (energy systems)', 'Other (industry)',
                     'Waste', 'Other (transport)', 'Coal mining fugitive emissions', 'Non-CO2 (all buildings)']:
             
-            variable_name = subsectors.loc[sector_or_subsector]['1'] + ' ' + gas_name + ' ' +  subsectors.loc[sector_or_subsector]['3'] + ' ' +  subsectors.loc[sector_or_subsector]['4'] + ' ' +  subsectors.loc[subsector]['5']
+            variable_name = subsectors.loc[sector_or_subsector]['1'] + ' ' + gas_name + ' ' +  subsectors.loc[sector_or_subsector]['3'] + ' ' +  subsectors.loc[sector_or_subsector]['4'] + ' ' +  subsectors.loc[sector_or_subsector]['5']
         
         elif sector_or_subsector in ['AFOLU', 'Buildings', 'Energy systems', 'Industry', 'Transport']:
             variable_name = gas_name + ' ' + subsectors.loc[sector_or_subsector]['3'] + ' ' +  subsectors.loc[sector_or_subsector]['4'] + ' ' +  subsectors.loc[sector_or_subsector]['5']

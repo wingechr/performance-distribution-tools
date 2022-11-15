@@ -121,7 +121,7 @@ ipcc_gas = 'GHG'
 #                               'Industry'
 #                               'Transport'
 #                               'Total (excl. LULUCF)'
-ipcc_sector_or_subsector = 'Total (excl. LULUCF)'
+ipcc_sector_or_subsector = 'Energy systems'
 
 # Select the data type that you want to plot:
 # Options are:      'absolute'
@@ -129,7 +129,7 @@ ipcc_sector_or_subsector = 'Total (excl. LULUCF)'
 #                   'per USD'
 # WARNING:  Per capita and per USD measures do not apply to the following variables: share of renewables in electricity and share of fossil
 #           fuels in primary energy consumed.
-data_type = 'absolute'
+data_type = 'per capita'
 
 # Select the type of plot that you want to create:
 # Options are:      1: Distribution of variable in specified year.
@@ -137,4 +137,4 @@ data_type = 'absolute'
 #                   3: 5-year average trend in the specified year.
 #                   4: Year of peaking
 
-plot_type = 1
+plot_type = 3
