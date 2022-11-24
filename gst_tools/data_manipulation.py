@@ -281,12 +281,14 @@ def define_ipcc_variable_name(sector_or_subsector, gas, ipcc_subsectors='gst_too
     if sector_or_subsector not in list(subsectors.index):
         raise ValueError('The sector or subsector selected does not exist in the database. Please check if it was entered correctly.')
     else:
-        if sector_or_subsector in ['Oil and gas fugitive emissions', 'Other (energy systems)', 'Other (industry)',
-                    'Waste', 'Other (transport)', 'Coal mining fugitive emissions', 'Non-CO2 (all buildings)']:
+        if sector_or_subsector.split(' [', 1)[0] in ['Oil and gas fugitive emissions', 'Other (energy systems)', 'Other (industry)',
+                    'Other (transport)', 'Coal mining fugitive emissions', 'Non-CO2 (all buildings)']:
             
             variable_name = subsectors.loc[sector_or_subsector]['1'] + ' ' + gas_name + ' ' +  subsectors.loc[sector_or_subsector]['3'] + ' ' +  subsectors.loc[sector_or_subsector]['4'] + ' ' +  subsectors.loc[sector_or_subsector]['5']
         
-        elif sector_or_subsector in ['AFOLU', 'Buildings', 'Energy systems', 'Industry', 'Transport']:
+        elif sector_or_subsector in ['AFOLU', 'Buildings', 'Energy systems', 'Industry', 'Transport',
+                                        'AFOLU (indirect)', 'Buildings (indirect)', 
+                                        'Energy systems (indirect)', 'Industry (indirect)', 'Transport (indirect)']:
             variable_name = gas_name + ' ' + subsectors.loc[sector_or_subsector]['3'] + ' ' +  subsectors.loc[sector_or_subsector]['4'] + ' ' +  subsectors.loc[sector_or_subsector]['5']
         elif sector_or_subsector == "Total (excl. LULUCF)":
             variable_name = subsectors.loc[sector_or_subsector]['1'] + ' ' + gas_name + ' ' + subsectors.loc[sector_or_subsector]['3'] + ' ' +  subsectors.loc[sector_or_subsector]['5']
@@ -435,6 +437,9 @@ def filter_ipcc(renamed_ipcc, gas, sector_or_subsector, countries, start_year, i
     sector_aggr_tot = pd.concat([sector_aggr, total]).reset_index(drop=True)
 
     sector_aggr_tot.rename(columns={'sector': 'category'}, inplace=True)
+    
+    # Adding sector name tag to subsectors
+    filtered['subsector'] = filtered['subsector'].astype(str) + ' [' + filtered['sector'].astype(str) + ']'
     filtered = filtered.drop(columns=['sector']).rename(columns={'subsector': 'category'})
     filtered = pd.concat([filtered, sector_aggr_tot]).reset_index(drop=True)
     
@@ -484,18 +489,34 @@ def filter_ipcc_indirect(renamed_ipcc_indirect, gas, sector_or_subsector, countr
     else:
         filtered = renamed_ipcc_indirect
         
-        # Calculating sector aggregation, including total excl. LULUCF
+        # (1) Calculating indirect emissions for all sectors
+        
+        indirect_data = filtered[filtered['source']=='indirect']
+        ind_sector_agg = indirect_data.drop(columns=['subsector', 'source']).groupby(by=['country', 'sector']).sum().reset_index()
+        ind_sector_agg['sector'] = ind_sector_agg['sector'].astype(str) + ' (indirect)'
+        
+        # (2) Calculating sectoral aggregates (the sectors include direct and indirect)
+
         sector_aggr = filtered.drop(columns=['subsector', 'source']).groupby(by=['country', 'sector']).sum().reset_index()
 
-        total = sector_aggr.groupby(by=['country']).sum().reset_index()
+        # (3) Calculating total excluding LULUCF (uses only direct emissions to avoid double counting)
+
+        total = filtered[filtered['source']=='direct'].groupby(by=['country']).sum().reset_index()
         sector_column = ['Total (excl. LULUCF)']*len(total)
         total.insert(1, 'sector', sector_column)
         
-        sector_aggr_tot = pd.concat([sector_aggr, total]).reset_index(drop=True)
+        # Concatenating sectoral indirect emissions (1), sectoral direct and indirect aggregates (2), and total emissions (3)
+
+        sector_aggr_tot = pd.concat([ind_sector_agg, sector_aggr, total]).reset_index(drop=True)
         sector_aggr_tot.rename(columns={'sector': 'category'}, inplace=True)
         
+         # Adding sector name tag to subsectors
+        filtered['subsector'] = filtered['subsector'].astype(str) + ' [' + filtered['sector'].astype(str) + ']'
+        
+        # Leaving only one "category" column
         filtered = filtered.drop(columns=['sector', 'source']).rename(columns={'subsector': 'category'})
 
+        # I think this is unnecessary:
         filtered = filtered.groupby(by=['country', 'category']).sum().reset_index()
         
         filtered = pd.concat([filtered, sector_aggr_tot]).reset_index(drop=True)
@@ -700,6 +721,9 @@ def rename_ipcc(raw_ipcc):
 
     raw_data_renamed.loc[raw_data_renamed['subsector'] == 'Rail ', 'subsector'] = 'Rail'
 
+    raw_data_renamed = raw_data_renamed.drop(raw_data_renamed[raw_data_renamed.subsector == 'International Aviation'].index)
+    raw_data_renamed = raw_data_renamed.drop(raw_data_renamed[raw_data_renamed.subsector == 'International Shipping'].index)
+
     raw_data_renamed = raw_data_renamed.astype({'year': str})
     return raw_data_renamed
 
@@ -710,6 +734,9 @@ def rename_ipcc_indirect(raw_ipcc_indirect):
         'subsector_title': 'subsector'}, inplace=False)
     
     raw_data_renamed.loc[raw_data_renamed['subsector'] == 'Rail ', 'subsector'] = 'Rail'
+
+    raw_data_renamed = raw_data_renamed.drop(raw_data_renamed[raw_data_renamed.subsector == 'International Aviation'].index)
+    raw_data_renamed = raw_data_renamed.drop(raw_data_renamed[raw_data_renamed.subsector == 'International Shipping'].index)
 
     return raw_data_renamed
 
